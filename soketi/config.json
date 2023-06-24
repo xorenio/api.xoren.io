@@ -1,0 +1,37 @@
+{
+    "debug": true,
+    "port": 6001,
+    "adapter": {
+        "driver": "local"
+    },
+    "cors": {
+        "credentials": true,
+        "origin": "*",
+        "methods": "*",
+        "allowedHeaders": [ "*" ]
+    },
+    "appManager": {
+        "driver": "array",
+        "array": {
+            "apps": [
+                {
+                    "id": "app-id",
+                    "key": "app-key",
+                    "secret": "app-secret",
+                    "maxConnections": -1,
+                    // "enableClientMessages": false,
+                    "enabled": true,
+                    "maxBackendEventsPerSecond": -1,
+                    "maxClientEventsPerSecond": -1,
+                    "maxReadRequestsPerSecond": -1,
+                    "webhooks": [
+                        {
+                            "url": "https://www.xoren.io",
+                            "event_types": ["channel_occupied"]
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+}

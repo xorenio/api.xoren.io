@@ -1,0 +1,4 @@
+*.pid
+*.sock
+!.gitignore
+!.dockerignore

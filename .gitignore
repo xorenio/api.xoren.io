@@ -1,0 +1,10 @@
+!.gitignore
+.env
+.npmrc
+.github_token
+/laravel/vendor
+/laravel/.env
+/laravel/.npmrc
+/laravel/package-lock.json
+/mysql/data/**
+/redis/data/**

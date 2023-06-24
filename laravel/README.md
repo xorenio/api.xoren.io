@@ -1,3 +1,27 @@
+# Laravel
+
+ + Laravel Octane + Swoole
+
+This is the backend component that handles the requests and proccesses the requested from the nginx reverse proxy
+
+## Component
+
+- **[Laravel](https://laravel.com)**
+- **[Swoole](https://swoole.com)**
+- **[Octane](https://laravel.com/docs/10.x/octane#main-content)**
+- **[Sanctum](https://laravel.com/docs/10.x/sanctum#main-content)**
+
+
+## Docker
+
+Docker is used for local development and production deployment.
+
+```
+$ docker build -f Dockerfile -t xoren_io_api_laravel ../.
+```
+
+## Laravel README.md
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">

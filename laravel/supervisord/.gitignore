@@ -1,0 +1,6 @@
+!sockets/
+sockets/*.pid
+sockets/*.sock
+sockets/*
+!.gitignore
+!.dockerignore
