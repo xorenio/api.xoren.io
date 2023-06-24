@@ -21,7 +21,7 @@ services:
       APP_USER: ${APP_USER:-laravel}
       SWOOLE_MAX_REQUESTS: 1000
       SWOOLE_TASK_WORKERS: 'auto'
-      SWOOLE_WATCH: false
+      SWOOLE_WATCH: 'false'
       SWOOLE_WORKERS: 'auto'
       SWOOLE_PORT: ${SWOOLE_PORT:-8000}
       XDEBUG_MODE: 'off'
