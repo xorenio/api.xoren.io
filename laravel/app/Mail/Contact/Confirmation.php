@@ -32,7 +32,7 @@ class Confirmation extends Mailable
             env('MAIL_FROM_NAME', 'XOREN.IO')
         );
 
-        $this->email_reply_to = new Address('me@xoren.io', 'Xoren.io');
+        $this->email_reply_to = new Address(env('MAIL_TO_ADDRESS'), env('MAIL_FROM_NAME', 'XOREN.IO'));
 
         $this->email_subject = "XOREN.IO - Message Received";
     }

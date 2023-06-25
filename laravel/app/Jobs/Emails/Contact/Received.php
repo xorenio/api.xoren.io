@@ -45,7 +45,7 @@ class Received implements ShouldQueue
                 );
             } else {
 
-                Mail::to($this->fields['email'])->send(new SendReceivedEmail($this->fields));
+                Mail::to(env('MAIL_TO_ADDRESS', 'me@xoren.io'))->send(new SendReceivedEmail($this->fields));
             }
 
         } catch (Exception $e) {

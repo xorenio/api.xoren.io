@@ -21,7 +21,4 @@ Route::get('/', function (Request $request) {
 
 use App\Http\Controllers\Contact\PostController as PostContact;
 
-Route::post('/contact', function (Request $request) {
-    return "hello";
-});
-// Route::post('/contact', PostContact::class);//->middleware('throttle:60,1');;
+Route::post('/contact', PostContact::class);//->middleware('throttle:60,1');;
