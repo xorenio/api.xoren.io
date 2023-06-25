@@ -78,7 +78,7 @@ case "$role" in
 
         while :
         do
-          php artisan schedule:run --verbose --no-interaction --quiet >> /var/www/storage/logs/schedule.txt 2>&1;
+          php artisan schedule:run --verbose --no-interaction --quiet >> /var/www/storage/logs/schedule.log 2>&1;
           sleep 1s
         done
         ;;

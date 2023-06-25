@@ -1,0 +1,30 @@
+{
+  "intelephense.environment.phpVersion": "7.4",
+  "intelephense.environment.composerJsonPath": "laravel/composer.json",
+  "intelephense.environment.includePaths": ["src"],
+  "intelephense.diagnostics.undefinedTypes": true,
+  "intelephense.diagnostics.undefinedMethods": true,
+  "intelephense.diagnostics.undefinedFunctions": true,
+  "intelephense.diagnostics.undefinedConstants": true,
+  "intelephense.diagnostics.undefinedVariables": true,
+  "intelephense.diagnostics.unusedVariables": true,
+  "intelephense.diagnostics.unusedParameters": true,
+  "intelephense.diagnostics.unusedImports": true,
+  "intelephense.diagnostics.redundantMethods": true,
+  "intelephense.diagnostics.redundantVariables": true,
+  "intelephense.diagnostics.redundantProperties": true,
+  "intelephense.diagnostics.redundantAssignments": true,
+  "intelephense.diagnostics.redundantConditionals": true,
+  "intelephense.diagnostics.redundantReturns": true,
+  "intelephense.files.maxSize": 5000000,
+  "intelephense.index.exclude": [
+    "**/node_modules/**",
+    "**/vendor/**",
+    "**/tests/**"
+  ],
+  "intelephense.format.enable": true,
+  "intelephense.format.insertSpaceBeforeFunctionParenthesis": true,
+  "intelephense.format.insertSpaceAfterCommaDelimiter": true,
+  "intelephense.format.insertSpaceAfterSemicolonInForStatements": true,
+  "intelephense.format.insertSpaceBeforeAndAfterBinaryOperators": true
+}

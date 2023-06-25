@@ -208,9 +208,6 @@ function replaceEnvVars() {
             if echo $CONFIGLINE | grep -F = &>/dev/null; then
                 CONFIGNAME=$(echo "$CONFIGLINE" | cut -d '=' -f 1)
                 CONFIGVALUE=$(echo "$CONFIGLINE" | cut -d '=' -f 2-)
-                # echo "CONFIGNAME: $CONFIGNAME"
-                # echo "CONFIGVALUE: $CONFIGVALUE"
-                # cat .env.production | grep "<$CONFIGNAME>"
 
                 if cat .env.${DEPLOYMENT_ENV} | grep '"<'$CONFIGNAME'>"' &>/dev/null; then
                      sed -i 's|"<'$CONFIGNAME'>"|'$CONFIGVALUE'|' .env.${DEPLOYMENT_ENV}
@@ -281,28 +278,28 @@ function getProjectVersionViaRepoPackage() {
 
 function moveLaravelAppStorageFolder() {
 
-    logInfo "Moving laravel/storage/app folder"
+    logInfo "Moving laravel storage folder"
 
     ## IF SCREEN PROGRAM IS INSTALL
     if [[ $SCREEN_IS_PRESENT == true ]]; then
 
         ## CHECK IF BACKGROUND TASKS ARE STILL RUNNING
-        if ! screen -list | grep -q "${GITHUB_REPO_NAME}_deployment_moving_app_storage"; then
+        if ! screen -list | grep -q "${GITHUB_REPO_NAME}_deployment_moving_storage"; then
 
             logInfo "Moving laravel/storage/app folder files moving task in background."
 
 
             ## Create screen
-            screen -dmS "${GITHUB_REPO_NAME}_deployment_moving_app_storage"
+            screen -dmS "${GITHUB_REPO_NAME}_deployment_moving_storage"
 
 
             ## Pipe command to screen
-            screen -S "${GITHUB_REPO_NAME}_deployment_moving_app_storage" -p 0 -X stuff 'rm ~/'${GITHUB_REPO_NAME}'/laravel/storage/app/ -R'$(echo -ne '\015')
-            screen -S "${GITHUB_REPO_NAME}_deployment_moving_app_storage" -p 0 -X stuff 'mv -u -f ~/'${GITHUB_REPO_NAME}'_'${NOWDATESTAMP}'/laravel/storage/app ~/'${GITHUB_REPO_NAME}'/laravel/storage/ '$(echo -ne '\015')
+            screen -S "${GITHUB_REPO_NAME}_deployment_moving_storage" -p 0 -X stuff 'rm ~/'${GITHUB_REPO_NAME}'/laravel/storage/ -R'$(echo -ne '\015')
+            screen -S "${GITHUB_REPO_NAME}_deployment_moving_storage" -p 0 -X stuff 'mv -u -f ~/'${GITHUB_REPO_NAME}'_'${NOWDATESTAMP}'/laravel/storage/ ~/'${GITHUB_REPO_NAME}'/laravel/ '$(echo -ne '\015')
 
 
             ## Pipe in exit separately to ensure exit on screen
-            screen -S "${GITHUB_REPO_NAME}_deployment_moving_app_storage" -p 0 -X stuff 'exit '$(echo -ne '\015')
+            screen -S "${GITHUB_REPO_NAME}_deployment_moving_storage" -p 0 -X stuff 'exit '$(echo -ne '\015')
 
         else # IF SCREEN FOUND
 
@@ -536,32 +533,24 @@ function doUpdate() {
 
     ## RESET APP LOG FILES
     logInfo "Added deployment date to laravel logs"
-    # touch ~/${GITHUB_REPO_NAME}/laravel/storage/logs/laravel.log
-    # touch ~/${GITHUB_REPO_NAME}/laravel/storage/logs/supervisord/laravel.log
-    # touch ~/${GITHUB_REPO_NAME}/laravel/storage/logs/supervisord/queue.log
-    # touch ~/${GITHUB_REPO_NAME}/laravel/storage/logs/supervisord/queue_high.log
-    echo "" > ~/${GITHUB_REPO_NAME}/laravel/storage/logs/laravel.log
-    echo "" > ~/${GITHUB_REPO_NAME}/laravel/storage/logs/supervisord/laravel.log
-    echo "" > ~/${GITHUB_REPO_NAME}/laravel/storage/logs/supervisord/queue.log
-    echo "" > ~/${GITHUB_REPO_NAME}/laravel/storage/logs/supervisord/queue_high.log
-    echo "DEPLOYMENT INFO: ${NOWDATESTAMP}" >> ~/${GITHUB_REPO_NAME}/laravel/storage/logs/laravel.log
-    echo "DEPLOYMENT INFO: ${NOWDATESTAMP}" >> ~/${GITHUB_REPO_NAME}/laravel/storage/logs/supervisord/laravel.log
-    echo "DEPLOYMENT INFO: ${NOWDATESTAMP}" >> ~/${GITHUB_REPO_NAME}/laravel/storage/logs/supervisord/queue.log
-    echo "DEPLOYMENT INFO: ${NOWDATESTAMP}" >> ~/${GITHUB_REPO_NAME}/laravel/storage/logs/supervisord/queue_high.log
-    echo "" >> ~/${GITHUB_REPO_NAME}/laravel/storage/logs/laravel.log
-    echo "" >> ~/${GITHUB_REPO_NAME}/laravel/storage/logs/supervisord/laravel.log
-    echo "" >> ~/${GITHUB_REPO_NAME}/laravel/storage/logs/supervisord/queue.log
-    echo "" >> ~/${GITHUB_REPO_NAME}/laravel/storage/logs/supervisord/queue_high.log
-    chmod 777 ~/${GITHUB_REPO_NAME}/laravel/storage/logs/laravel.log
-    chmod 777 ~/${GITHUB_REPO_NAME}/laravel/storage/logs/supervisord/laravel.log
-    chmod 777 ~/${GITHUB_REPO_NAME}/laravel/storage/logs/supervisord/queue.log
-    chmod 777 ~/${GITHUB_REPO_NAME}/laravel/storage/logs/supervisord/queue_high.log
+
+    echo "" >> ~/${GITHUB_REPO_NAME}/laravel/storage/logs/*.log
+    echo "" >> ~/${GITHUB_REPO_NAME}/laravel/storage/logs/supervisord/*.log
+
+    echo "DEPLOYMENT DATESTAMP: ${NOWDATESTAMP}" >> ~/${GITHUB_REPO_NAME}/laravel/storage/logs/*.log
+    echo "DEPLOYMENT DATESTAMP: ${NOWDATESTAMP}" >> ~/${GITHUB_REPO_NAME}/laravel/storage/logs/supervisord/*.log
+
+    echo "" >> ~/${GITHUB_REPO_NAME}/laravel/storage/logs/*.log
+    echo "" >> ~/${GITHUB_REPO_NAME}/laravel/storage/logs/supervisord/*.log
+
+    chmod 777 ~/${GITHUB_REPO_NAME}/laravel/storage/logs/*.log
+    chmod 777 ~/${GITHUB_REPO_NAME}/laravel/storage/logs/supervisord/*.log
 
 
     ## WAIT FOR FILE & FOLDER OPERATIONS TO COMPLETE
     if [[ $SCREEN_IS_PRESENT == true ]]; then
-       while screen -list | grep -q "${GITHUB_REPO_NAME}_deployment_moving_app_storage"; do
-           sleep 3
+       while screen -list | grep -q "${GITHUB_REPO_NAME}_deployment_moving_storage"; do
+           sleep 1s
        done
     fi
 

@@ -15,5 +15,13 @@ use Illuminate\Http\Request;
 */
 
 Route::get('/', function (Request $request) {
-    return view('welcome');
+    return response("", 418)->header('Content-Type', 'text/plain'); // I'm a teapot
 });
+
+
+use App\Http\Controllers\Contact\PostController as PostContact;
+
+Route::post('/contact', function (Request $request) {
+    return "hello";
+});
+// Route::post('/contact', PostContact::class);//->middleware('throttle:60,1');;
