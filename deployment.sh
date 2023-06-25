@@ -201,16 +201,16 @@ function replaceEnvVars() {
         ## GET FOR CHECK FIRST CHAR IN CONFIG LINE
         LINEF=${CONFIGLINE:0:1}
 
-        ## CHECK FIRST LETTER ISN'T # & LINE LETTER LENGTH IS LONGER THEN 3
-        if [[ $LINEF != " " && $LINEF != "#" && ${#CONFIGLINE} > 3 ]]; then
+        ## CHECK FIRST LETTER ISN'T # & LINE LETTER LENGTH IS LONGER THAN 3
+        if [[ $LINEF != " " && $LINEF != "#" && ${#CONFIGLINE} -gt 3 ]]; then
 
-            ## CHECK FOR = IN CONFIG LINE SEPERATE IF STATMENT FORMATTED DIFFERENTLY TO WORK
-            if echo $CONFIGLINE | grep -F = &>/dev/null; then
+            ## CHECK FOR = IN CONFIG LINE SEPARATE IF STATEMENT FORMATTED DIFFERENTLY TO WORK
+            if echo "$CONFIGLINE" | grep -F = &>/dev/null; then
                 CONFIGNAME=$(echo "$CONFIGLINE" | cut -d '=' -f 1)
                 CONFIGVALUE=$(echo "$CONFIGLINE" | cut -d '=' -f 2-)
 
-                if cat .env.${DEPLOYMENT_ENV} | grep '"<'$CONFIGNAME'>"' &>/dev/null; then
-                     sed -i 's|"<'$CONFIGNAME'>"|'$CONFIGVALUE'|' .env.${DEPLOYMENT_ENV}
+                if grep -F "\"<$CONFIGNAME>\"" .env.${DEPLOYMENT_ENV} &>/dev/null; then
+                    sed -i "s|\"<$CONFIGNAME>\"|$CONFIGVALUE|" .env.${DEPLOYMENT_ENV}
                 fi
             fi
         fi
@@ -218,8 +218,8 @@ function replaceEnvVars() {
 
 
     ## REPLACED DEPLOYMENT VARS
-    sed -i 's|"<APP_VERSION>"|'$NEW_VERSION'|' .env.${DEPLOYMENT_ENV}
-    sed -i 's|"<APP_UPDATED_AT>"|'$NOWDATESTAMP'|' .env.${DEPLOYMENT_ENV}
+    sed -i "s|\"<APP_VERSION>\"|$NEW_VERSION|" .env.${DEPLOYMENT_ENV}
+    sed -i "s|\"<APP_UPDATED_AT>\"|$NOWDATESTAMP|" .env.${DEPLOYMENT_ENV}
 
 
     logInfo "END: Replacing APP environment variables"
