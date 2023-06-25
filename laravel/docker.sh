@@ -11,7 +11,13 @@ installVendorPackages() {
       # Place file to cause wait on other processes
       touch composer.install.txt
       echo "[INFO] Installing Php Packages via composer"
-      composer install
+      if [[ $deployment = "production" ]]; then
+        composer install --no-dev
+        composer update
+      else
+        composer install
+        composer update
+      fi
       rm composer.install.txt
   fi
 }
