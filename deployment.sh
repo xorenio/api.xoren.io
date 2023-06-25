@@ -279,6 +279,45 @@ function getProjectVersionViaRepoPackage() {
 }
 
 
+function moveLaravelAppStorageFolder() {
+
+    logInfo "Moving laravel/storage/app folder"
+
+    ## IF SCREEN PROGRAM IS INSTALL
+    if [[ $SCREEN_IS_PRESENT == true ]]; then
+
+        ## CHECK IF BACKGROUND TASKS ARE STILL RUNNING
+        if ! screen -list | grep -q "${GITHUB_REPO_NAME}_deployment_moving_app_storage"; then
+
+            logInfo "Moving laravel/storage/app folder files moving task in background."
+
+
+            ## Create screen
+            screen -dmS "${GITHUB_REPO_NAME}_deployment_moving_app_storage"
+
+
+            ## Pipe command to screen
+            screen -S "${GITHUB_REPO_NAME}_deployment_moving_app_storage" -p 0 -X stuff 'rm ~/'${GITHUB_REPO_NAME}'/laravel/storage/app/ -R'$(echo -ne '\015')
+            screen -S "${GITHUB_REPO_NAME}_deployment_moving_app_storage" -p 0 -X stuff 'mv -u -f ~/'${GITHUB_REPO_NAME}'_'${NOWDATESTAMP}'/laravel/storage/app ~/'${GITHUB_REPO_NAME}'/laravel/storage/ '$(echo -ne '\015')
+
+
+            ## Pipe in exit separately to ensure exit on screen
+            screen -S "${GITHUB_REPO_NAME}_deployment_moving_app_storage" -p 0 -X stuff 'exit '$(echo -ne '\015')
+
+        else # IF SCREEN FOUND
+
+            logError "Task of moving vendor folder in background already running."
+        fi
+    else ## IF NO SCREEN PROGRAM
+
+        ## Moving files in this process
+        logInfo ""
+        logInfo "Running moving laravel/storage/app."
+        mv -u -f ~/${GITHUB_REPO_NAME}_${NOWDATESTAMP}/laravel/node_modules/ ~/${GITHUB_REPO_NAME}/laravel/
+        logInfo "Finished Moving laravel/storage/app folder."
+        logInfo ""
+    fi
+}
 
 
 ## DOING UPDATE FUNCTION
@@ -356,7 +395,7 @@ function doUpdate() {
 
 
     ## MOVE PROJECT FILES
-
+    moveLaravelAppStorageFolder
 
 
     # logInfo "cd to updated local project files"
@@ -519,15 +558,9 @@ function doUpdate() {
     chmod 777 ~/${GITHUB_REPO_NAME}/laravel/storage/logs/supervisord/queue_high.log
 
 
-
+    ## WAIT FOR FILE & FOLDER OPERATIONS TO COMPLETE
     if [[ $SCREEN_IS_PRESENT == true ]]; then
-       while screen -list | grep -q "${GITHUB_REPO_NAME}_deployment_move_node_modules"; do
-           sleep 3
-       done
-       while screen -list | grep -q "${GITHUB_REPO_NAME}_deployment_move_vendor"; do
-           sleep 3
-       done
-       while screen -list | grep -q "${GITHUB_REPO_NAME}_deployment_move_public_scenes"; do
+       while screen -list | grep -q "${GITHUB_REPO_NAME}_deployment_moving_app_storage"; do
            sleep 3
        done
     fi
