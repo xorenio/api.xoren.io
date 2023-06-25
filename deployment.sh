@@ -25,6 +25,7 @@ SCRIPT="$(basename "$(test -L "$0" && readlink "$0" || echo "$0")")"
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 SCRIPT_DEBUG=false # true AKA echo to console | false echo to log file
 
+cd $SCRIPT_DIR
 
 DEPLOYMENT_ENV_LOCATION=false
 DEPLOYMENT_ENV="production"
@@ -448,9 +449,9 @@ function doUpdate() {
 
     ## CHANGE FILE PERMS
     # logInfo "Change file perms"
-    docker-compose -f docker-compose.yml run --rm laravel php artisan queue:flush
-    docker-compose -f docker-compose.yml run --rm laravel php artisan queue:clear
-    docker-compose -f docker-compose.yml run --rm laravel php artisan cache:clear
+    # docker-compose -f docker-compose.yml run --rm laravel php artisan queue:flush
+    # docker-compose -f docker-compose.yml run --rm laravel php artisan queue:clear
+    # docker-compose -f docker-compose.yml run --rm laravel php artisan cache:clear
     # docker-compose -f docker-compose.yml run --user root --rm laravel chmod 777 /var/www/ -R
     # docker-compose -f docker-compose.yml run --user root --rm laravel rm /var/www/package-lock.json
     # docker-compose -f docker-compose.yml run --user root --rm laravel rm /laravel/public/mix-manifest.json
