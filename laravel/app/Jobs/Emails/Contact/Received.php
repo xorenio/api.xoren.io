@@ -37,7 +37,7 @@ class Received implements ShouldQueue
         try {
             if (in_array(env('MAIL_MAILER', 'log'), ['log', false, "false"]) ) {
 
-                \Log::error(
+                \Log::info(
                     "\n --- EMAIL LOGGED ---\nEmails\Contact\Received\n"
                     ."\nEmail Data\n"
                     .json_encode($this->fields)
@@ -45,16 +45,17 @@ class Received implements ShouldQueue
                 );
             } else {
 
-                Mail::to(env('MAIL_TO_ADDRESS', 'me@xoren.io'))->send(new SendReceivedEmail($this->fields));
+                Mail::to(env('MAIL_TO_ADDRESS', 'me@xoren.io'), env('MAIL_FROM_NAME', 'XOREN.IO'))->send(new SendReceivedEmail($this->fields));
             }
 
         } catch (Exception $e) {
 
             \Log::error(
-                "\n --- EMAIL LOGGED --- \nFault Message\n"
-                .json_encode($e->getMessage())
+                "\n --- EMAIL LOGGED --- Emails\Contact\Received"
                 ."\nEmail Data\n"
                 .json_encode($this->fields)
+                ."\nFault Message\n"
+                .json_encode($e->getMessage())
                 ."\n--- EMAIL LOGGED ---\n"
             );
         }

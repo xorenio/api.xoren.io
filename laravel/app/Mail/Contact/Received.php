@@ -14,7 +14,6 @@ class Received extends Mailable
 {
     use Queueable, SerializesModels;
 
-    protected $fields;
     protected $email_subject;
     protected $email_from;
     protected $email_reply_to;
@@ -23,19 +22,14 @@ class Received extends Mailable
      * Create a new message instance.
      */
     public function __construct(
-        Array $fields
+        public Array $fields
     ) {
-        $this->fields = $fields;
-
-        $this->email_from = new Address(
-            env('MAIL_FROM_ADDRESS', 'noreply@mailer.xoren.io'),
-            env('MAIL_FROM_NAME', 'XOREN.IO')
-        );
-
-        $this->email_reply_to = new Address(
-            $fields['email'],
-            $fields['name']
-        );
+        $this->email_reply_to = [
+            new Address(
+                $fields['email'],
+                $fields['name']
+            )
+        ];
 
         $this->email_subject = "XOREN.IO - Enquiry Received";
     }
@@ -46,7 +40,6 @@ class Received extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            from: $this->email_from,
             replyTo: $this->email_reply_to,
             subject: $this->email_subject,
         );
@@ -58,7 +51,7 @@ class Received extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'view.emails.contact.received',
+            view: 'emails.contact.received',
             with: $this->fields,
         );
     }

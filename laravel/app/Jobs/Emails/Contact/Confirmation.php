@@ -37,7 +37,7 @@ class Confirmation implements ShouldQueue
         try {
             if (in_array(env('MAIL_MAILER', 'log'), ['log', false, "false"]) ) {
 
-                \Log::error(
+                \Log::info(
                     "\n --- EMAIL LOGGED ---\nEmails\Contact\Confirmation\n"
                     ."\nEmail Data\n"
                     .json_encode($this->fields)
@@ -45,16 +45,17 @@ class Confirmation implements ShouldQueue
                 );
             } else {
 
-                Mail::to($this->fields['email'])->send(new SendConfirmationEmail($this->fields));
+                Mail::to($this->fields['email'], $this->fields['name'])->send(new SendConfirmationEmail($this->fields));
             }
 
         } catch (Exception $e) {
 
             \Log::error(
-                "\n --- EMAIL LOGGED --- \nFault Message\n"
-                .json_encode($e->getMessage())
+                "\n --- EMAIL LOGGED --- Emails\Contact\Confirmation"
                 ."\nEmail Data\n"
                 .json_encode($this->fields)
+                ."\nFault Message\n"
+                .json_encode($e->getMessage())
                 ."\n--- EMAIL LOGGED ---\n"
             );
         }

@@ -16,7 +16,6 @@ class Confirmation extends Mailable
 
     protected $fields;
     protected $email_subject;
-    protected $email_from;
     protected $email_reply_to;
 
     /**
@@ -27,12 +26,12 @@ class Confirmation extends Mailable
     ) {
         $this->fields = $fields;
 
-        $this->email_from = new Address(
-            env('MAIL_FROM_ADDRESS', 'noreply@mailer.xoren.io'),
-            env('MAIL_FROM_NAME', 'XOREN.IO')
-        );
-
-        $this->email_reply_to = new Address(env('MAIL_TO_ADDRESS'), env('MAIL_FROM_NAME', 'XOREN.IO'));
+        $this->email_reply_to = [
+            new Address(
+                env('MAIL_TO_ADDRESS', 'me@xoren.io'),
+                env('MAIL_FROM_NAME', 'XOREN.IO'),
+            )
+        ];
 
         $this->email_subject = "XOREN.IO - Message Received";
     }
@@ -43,7 +42,6 @@ class Confirmation extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            from: $this->email_from,
             replyTo: $this->email_reply_to,
             subject: $this->email_subject,
         );
@@ -55,7 +53,7 @@ class Confirmation extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'view.emails.contact.confirmed',
+            view: 'emails.contact.confirmed',
             with: $this->fields,
         );
     }
