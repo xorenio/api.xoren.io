@@ -1,6 +1,7 @@
 #!/bin/bash
 
 role=${CONTAINER_ROLE:-laravel}
+swoole_port=${SWOOLE_PORT:-8000}
 deployment=${APP_ENV:-local}
 
 
@@ -40,6 +41,7 @@ waitForComposer() {
 if [[ $deployment != "local" ]]; then
   installVendorPackages
 
+  sed -i 's/--port=[0-9]\+/--port='$swoole_port'/g' /var/www/supervisord/production.conf
   sed -i 's/\(user\s*=\s*\).*$/\1'$APP_USER'/' /var/www/supervisord/production.conf
   sed -i 's/\(chown\s*=\s*\).*$/\1'$APP_USER':'$APP_USER'/' /var/www/supervisord/production.conf
   /usr/bin/supervisord -u ${APP_USER} -n -c /var/www/supervisord/production.conf
