@@ -7,6 +7,15 @@ check_openssl_commands() {
     done
 }
 
+# Create Diffie-Hellman key exchange file if missing
+if [[ ! -f "/etc/nginx/dhparam.pem" ]]; then
+    echo "Creating dhparam"
+    # Generate Diffie-Hellman parameters
+    openssl dhparam -out /etc/nginx/dhparam.pem 2048 &
+    # Capture the PID of the openssl command
+    dhparam_pid=$!
+fi
+
 # Create snakeoil cert if missing
 if [[ ! -f "/etc/ssl/private/ssl-cert-snakeoil.key" || ! -f "/etc/ssl/certs/ssl-cert-snakeoil.pem" ]]; then
     echo "Creating snakeoil"
@@ -19,15 +28,6 @@ if [[ ! -f "/etc/ssl/private/ssl-cert-snakeoil.key" || ! -f "/etc/ssl/certs/ssl-
     openssl_pid=$!
 fi
 
-# Create Diffie-Hellman key exchange file if missing
-if [[ ! -f "/etc/nginx/dhparam.pem" ]]; then
-    echo "Creating dhparam"
-    # Generate Diffie-Hellman parameters
-    openssl dhparam -out /etc/nginx/dhparam.pem 2048 &
-    # Capture the PID of the openssl command
-    dhparam_pid=$!
-fi
-
 # Check if openssl commands have finished
 if [[ -n $openssl_pid ]]; then
     check_openssl_commands "$openssl_pid"
@@ -36,13 +36,13 @@ if [[ -n $dhparam_pid ]]; then
     check_openssl_commands "$dhparam_pid"
 fi
 
-# Check if port 9000 is open on laravel DNS using netcat
-if nc -z -w1 laravel ${SWOOLE_PORT}; then
-    echo "Port ${SWOOLE_PORT} is open on laravel"
-else
-    echo "Port ${SWOOLE_PORT} is not open on laravel"
-    exit 1
-fi
+# Check if port ${SWOOLE_PORT:-8000} is open on laravel DNS using netcat
+while ! nc -z -w1 laravel ${SWOOLE_PORT:-8000}; do
+    echo "[ERROR] http://laravel:${SWOOLE_PORT:-8000} is CLOSED."
+    sleep 3s
+done
+
+echo "[SUCCESS] http://laravel:${SWOOLE_PORT:-8000} is OPEN."
 
 # Start crond in the background
 crond -l 2 -b

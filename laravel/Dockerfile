@@ -35,7 +35,7 @@ RUN apt-get update && apt-get upgrade -y -q && \
     gcc git glew-utils gosu htop iputils-ping libcap2-bin libfreetype6-dev \
     libgconf-2-4 libglew-dev libjpeg-dev libonig-dev libpng-dev \
     libx11-dev libxcursor-dev libxi6 libxinerama-dev libxml2-dev libxrandr-dev \
-    libzip-dev nano nasm pngquant python3 python3-pip screen \
+    libzip-dev nano nasm ncat netcat-traditional pngquant python3 python3-pip screen \
     software-properties-common sqlite3 sudo supervisor unzip wget zip imagemagick \
     autoconf dpkg-dev dpkg file g++ gcc libc-dev make pkgconf re2c && \
     apt-get install -y -q --no-install-recommends mariadb-client && \
