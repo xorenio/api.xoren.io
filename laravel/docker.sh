@@ -1,8 +1,13 @@
 #!/bin/bash
 
 role=${CONTAINER_ROLE:-laravel}
-swoole_port=${SWOOLE_PORT:-8000}
 deployment=${APP_ENV:-local}
+
+swoole_task_workers=${SWOOLE_TASK_WORKERS:-auto}
+swoole_port=${SWOOLE_PORT:-8000}
+swoole_workers=${SWOOLE_WORKERS:-auto}
+swoole_max_requests=${SWOOLE_MAX_REQUESTS:-500}
+
 
 
 # install vendor packages
@@ -42,11 +47,17 @@ waitForComposer() {
 # Production mode
 if [[ $deployment != "local" ]]; then
   installVendorPackages
+  SUPERVISORD_CONF=/var/www/supervisord/production.conf
 
   sed -i 's/--port=[0-9]\+/--port='$swoole_port'/g' /var/www/supervisord/production.conf
-  sed -i 's/\(user\s*=\s*\).*$/\1'$APP_USER'/' /var/www/supervisord/production.conf
-  sed -i 's/\(chown\s*=\s*\).*$/\1'$APP_USER':'$APP_USER'/' /var/www/supervisord/production.conf
-  /usr/bin/supervisord -u ${APP_USER} -n -c /var/www/supervisord/production.conf
+  sed -i 's/--workers=[0-9]\+\|--workers=auto/--workers='$swoole_workers'/g' $SUPERVISORD_CONF
+  sed -i 's/--task-workers=[0-9]\+\|--task-workers=auto/--task-workers='$swoole_task_workers'/g' $SUPERVISORD_CONF
+  sed -i 's/--max-requests=[0-9]\+\|--max-requests=auto/--max-requests='$swoole_max_requests'/g' $SUPERVISORD_CONF
+
+
+  sed -i 's/\(user\s*=\s*\).*$/\1'$APP_USER'/' $SUPERVISORD_CONF
+  sed -i 's/\(chown\s*=\s*\).*$/\1'$APP_USER':'$APP_USER'/' $SUPERVISORD_CONF
+  /usr/bin/supervisord -u ${APP_USER} -n -c ${SUPERVISORD_CONF}
   /usr/bin/supervisorctl start all
 
   exit;
