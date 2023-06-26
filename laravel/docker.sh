@@ -3,10 +3,11 @@
 role=${CONTAINER_ROLE:-laravel}
 deployment=${APP_ENV:-local}
 
-swoole_task_workers=${SWOOLE_TASK_WORKERS:-auto}
-swoole_port=${SWOOLE_PORT:-8000}
-swoole_workers=${SWOOLE_WORKERS:-auto}
-swoole_max_requests=${SWOOLE_MAX_REQUESTS:-500}
+# swoole_task_workers=${SWOOLE_WA:-auto}
+# swoole_task_workers=${SWOOLE_TASK_WORKERS:-auto}
+# swoole_port=${SWOOLE_PORT:-8000}
+# swoole_workers=${SWOOLE_WORKERS:-auto}
+# swoole_max_requests=${SWOOLE_MAX_REQUESTS:-500}
 
 
 
@@ -20,7 +21,7 @@ installVendorPackages() {
       if [[ $deployment = "production" ]]; then
         composer install --no-dev
         composer update
-        npm install
+        npm install --production
       else
         composer install
         composer update
@@ -48,15 +49,30 @@ waitForComposer() {
 if [[ $deployment != "local" ]]; then
   installVendorPackages
   SUPERVISORD_CONF=/var/www/supervisord/production.conf
+  SWOOLE_CMD="/usr/local/bin/php -d variables_order=EGPCS /var/www/artisan octane:start --server=swoole --host=0.0.0.0"
+  SWOOLE_CMD=${SWOOLE_CMD}" --port="${SWOOLE_PORT:-8000}
+  SWOOLE_CMD=${SWOOLE_CMD}" --workers="${SWOOLE_WORKERS:-auto}
+  SWOOLE_CMD=${SWOOLE_CMD}" --task-workers="${SWOOLE_TASK_WORKERS:-auto}
+  SWOOLE_CMD=${SWOOLE_CMD}" --max-requests="${SWOOLE_MAX_REQUESTS:-500}
 
-  sed -i 's/--port=[0-9]\+/--port='$swoole_port'/g' /var/www/supervisord/production.conf
-  sed -i 's/--workers=[0-9]\+\|--workers=auto/--workers='$swoole_workers'/g' $SUPERVISORD_CONF
-  sed -i 's/--task-workers=[0-9]\+\|--task-workers=auto/--task-workers='$swoole_task_workers'/g' $SUPERVISORD_CONF
-  sed -i 's/--max-requests=[0-9]\+\|--max-requests=auto/--max-requests='$swoole_max_requests'/g' $SUPERVISORD_CONF
+  TRUES=(true 'true' "true" "True" "TRUE")
 
+  for val in "${TRUES[@]}"; do
+    if [[ "${SWOOLE_WATCH:-false}" == "$val" ]]; then
+      echo "YES SWOOLE_WATCH: ${SWOOLE_WATCH:-false}"
+      SWOOLE_CMD=${SWOOLE_CMD}" --watch"
+      break
+    fi
+  done
 
+  # this is the broken sed command its doesnt seem to change the command
+  sed -i '/\[program:laravel\]/,/\[/{/^command =/s#\(^command = \).*#\1'"$SWOOLE_CMD"'#}' $SUPERVISORD_CONF
+
+  # Replace the user
   sed -i 's/\(user\s*=\s*\).*$/\1'$APP_USER'/' $SUPERVISORD_CONF
   sed -i 's/\(chown\s*=\s*\).*$/\1'$APP_USER':'$APP_USER'/' $SUPERVISORD_CONF
+
+
   /usr/bin/supervisord -u ${APP_USER} -n -c ${SUPERVISORD_CONF}
   /usr/bin/supervisorctl start all
 
@@ -73,7 +89,15 @@ case "$role" in
 
     # Start Laravel
     # php-fpm
-    php artisan octane:start --server=swoole --host=0.0.0.0 --port=${SWOOLE_PORT:-8000} --workers=${SWOOLE_WORKERS:-auto} --task-workers=${SWOOLE_TASK_WORKERS:-auto} --max-requests=${SWOOLE_MAX_REQUESTS:-500} --watch
+    if [[ $SWOOLE_WATCH == "false" ]]; then
+        php artisan octane:start --server=swoole --host=0.0.0.0 \
+        --port=${SWOOLE_PORT:-8000} --workers=${SWOOLE_WORKERS:-auto} \
+        --task-workers=${SWOOLE_TASK_WORKERS:-auto} --max-requests=${SWOOLE_MAX_REQUESTS:-500}
+    else
+        php artisan octane:start --server=swoole --host=0.0.0.0 \
+        --port=${SWOOLE_PORT:-8000} --workers=${SWOOLE_WORKERS:-auto} \
+        --task-workers=${SWOOLE_TASK_WORKERS:-auto} --max-requests=${SWOOLE_MAX_REQUESTS:-500} --watch
+    fi
     ;;
   *)
     waitForLaravelBoot
