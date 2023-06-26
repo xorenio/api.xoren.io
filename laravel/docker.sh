@@ -15,9 +15,11 @@ installVendorPackages() {
       if [[ $deployment = "production" ]]; then
         composer install --no-dev
         composer update
+        npm install
       else
         composer install
         composer update
+        npm install
       fi
       rm composer.install.txt
   fi
