@@ -9,7 +9,7 @@ installPackages() {
     touch packages.installing.txt
     echo "[INFO] Installing PHP packages via composer"
     if [[ $deployment = "production" ]]; then
-      composer install --no-dev
+      composer install --prefer-dist --no-progress  --no-dev
       composer update
       npm install --production
     else

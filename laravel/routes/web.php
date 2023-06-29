@@ -14,6 +14,9 @@ use Illuminate\Http\Request;
 |
 */
 
+/**
+ * @description The home page returning 418 http code
+ */
 Route::get('/', function (Request $request) {
     return response("", 418)->header('Content-Type', 'text/plain'); // I'm a teapot
 });
@@ -21,4 +24,7 @@ Route::get('/', function (Request $request) {
 
 use App\Http\Controllers\Contact\PostController as PostContact;
 
-Route::post('/contact', PostContact::class);//->middleware('throttle:60,1');;
+/**
+ * @description Post request for the contact form
+ */
+Route::post('/contact', PostContact::class)->middleware('throttle:3,1');;
