@@ -462,9 +462,6 @@ _write_secrets_file() {
 
     cat > "$HOME/.${GITHUB_REPO_NAME}" <<EOF
 # Deployment
-DEPLOYMENT_API_URL="http://localhost/api/"
-SSH_PUB_KEY="https://raw.githubusercontent.com/xorenio/ssh/main/id_ed25519_2.pub"
-SSH_BACKUP_PUB_KEY="https://raw.githubusercontent.com/xorenio/ssh/main/id_ed25519.pub"
 APP_KEY=base64:
 APP_USER_UUID=1000
 APP_USER=laravel
@@ -472,6 +469,13 @@ DB_HOST=localhost
 DB_DATABASE="laravel"
 DB_USERNAME="laravel"
 DB_PASSWORD="password"
+DEPLOYMENT_ENV=production
+DEPLOYMENT_TIMEZONE=Europe/London
+DEPLOYMENT_ENCODE=en_GB
+SSH_PUB_KEY="https://raw.githubusercontent.com/xorenio/ssh/main/id_ed25519_2.pub"
+SSH_BACKUP_PUB_KEY="https://raw.githubusercontent.com/xorenio/ssh/main/id_ed25519.pub"
+GIT_EMAIL="john@xoren.io"
+GIT_NAME="John J"
 EOF
     chmod 770 "$HOME/.${GITHUB_REPO_NAME}"
     _log_info "Writen env vars file $HOME/.${GITHUB_REPO_NAME}"
@@ -491,7 +495,7 @@ _replace_secrets_vars() {
         _write_secrets_file
     fi
     ## PROPERGATE ENV FILE
-    [[ ! -f "$HOME/${GITHUB_REPO_NAME}/.env" ]] && cp "$HOME/${GITHUB_REPO_NAME}/.env.$DEPLOYMENT_ENV" "$HOME/${GITHUB_REPO_NAME}/.env"
+    [[ ! -f "$HOME"/"${GITHUB_REPO_NAME}"/.env ]] && cp "$HOME"/"${GITHUB_REPO_NAME}"/.env."$DEPLOYMENT_ENV" "$HOME"/"${GITHUB_REPO_NAME}"/.env
 
     sync;
 
