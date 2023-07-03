@@ -101,14 +101,14 @@ if [[ "$DEPLOYMENT_ENV_LOCATION" = "true" ]]; then
 fi
 
 ## CHECK .env FILE
-if [[ ! -f "${SCRIPT_DIR}/.env" ]]; then
+if [[ ! -f "$HOME"/"${GITHUB_REPO_NAME}"/.env ]]; then
 
-    cp "${SCRIPT_DIR}/.env.${DEPLOYMENT_ENV}" "$SCRIPT_DIR/${GITHUB_REPO_NAME}/.env"
+    cp "$HOME"/"${GITHUB_REPO_NAME}"/.env."${DEPLOYMENT_ENV}" "$HOME"/"${GITHUB_REPO_NAME}"/.env
 fi
 
 ## LOAD .env VARS and GITHUB TOKEN AND SECRETS
 # _log_info "Loading .env & github var"
-source "${SCRIPT_DIR}/.env"
+source "$HOME"/"${GITHUB_REPO_NAME}"/.env
 ## SECRETS
 _load_secrets_file
 
