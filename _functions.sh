@@ -735,8 +735,8 @@ _setup_ssh_key() {
     fi
 
     # Download the file
-    curl -sSf "${SSH_PUB_KEY}" -o "/tmp/FIRST_KEY.pub"
-    curl -sSf "${SSH_BACKUP_PUB_KEY}" -o "/tmp/SECOND_KEY.pub"
+    curl -sSf "$SSH_PUB_KEY" -o "/tmp/FIRST_KEY.pub"
+    curl -sSf "$SSH_BACKUP_PUB_KEY" -o "/tmp/SECOND_KEY.pub"
 
     # Read the content of the downloaded file
     first_key=$(cat "/tmp/FIRST_KEY.pub")
