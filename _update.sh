@@ -170,18 +170,18 @@ fi
 ## RESET APP LOG FILES
 _log_info "Added deployment date to laravel logs"
 
-echo "" >> "$HOME/${GITHUB_REPO_NAME}/laravel/storage/logs/"*.log
-echo "" >> "$HOME/${GITHUB_REPO_NAME}/laravel/storage/logs/supervisord/"*.log
-
-echo "DEPLOYMENT DATESTAMP: ${NOWDATESTAMP}" >> "$HOME/${GITHUB_REPO_NAME}/laravel/storage/logs/"*.log
-echo "DEPLOYMENT DATESTAMP: ${NOWDATESTAMP}" >> "$HOME/${GITHUB_REPO_NAME}/laravel/storage/logs/supervisord/"*.log
-
-echo "" >> "$HOME/${GITHUB_REPO_NAME}/laravel/storage/logs/"*.log
-echo "" >> "$HOME/${GITHUB_REPO_NAME}/laravel/storage/logs/supervisord/"*.log
-
-chmod 777 "$HOME/${GITHUB_REPO_NAME}/laravel/storage/logs/"*.log
-chmod 777 "$HOME/${GITHUB_REPO_NAME}/laravel/storage/logs/supervisord/"*.log
-
+for file in "$HOME/${GITHUB_REPO_NAME}/laravel/storage/logs/*.log"; do
+    echo "" >> "$file";
+    echo "DEPLOYMENT DATESTAMP: ${NOWDATESTAMP}" >> "$file";
+    echo "" >> "$file";
+    chmod 777 "$file";
+done
+for file in "$HOME/${GITHUB_REPO_NAME}/laravel/storage/logs/supervisord/*.log"; do z
+    echo "" >> "$file";
+    echo "DEPLOYMENT DATESTAMP: ${NOWDATESTAMP}" >> "$file";
+    echo "" >> "$file";
+    chmod 777 "$file";
+done
 ## WAIT FOR FILE & FOLDER OPERATIONS TO COMPLETE
 if [[ "$SCREEN_IS_PRESENT" == "true" ]]; then
    while screen -list | grep -q "${GITHUB_REPO_NAME}_deployment_moving_storage"; do
