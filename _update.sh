@@ -75,7 +75,7 @@ cd "$HOME"
 ## RENAME OLD PROJECT DIRECTORY
 _log_to_file "Moving old project folder."
 
-[[ -f "$HOME/$GITHUB_REPO_NAME/.env" ]] && rm "$HOME/$GITHUB_REPO_NAME/.env"
+[[ -f "$HOME"/"$GITHUB_REPO_NAME"/.env ]] && rm "$HOME"/"$GITHUB_REPO_NAME"/.env
 
 mv -u -f "$HOME/$GITHUB_REPO_NAME" "$HOME/${GITHUB_REPO_NAME}_${NOWDATESTAMP}"
 
@@ -86,10 +86,6 @@ sync
 git clone "git@github.com:${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}.git"
 
 ## WAIT FOR INODE CHANGES
-sync
-
-mv "$HOME/${GITHUB_REPO_NAME}_${NOWDATESTAMP}/etc-pihole/"*.db "$HOME/${GITHUB_REPO_NAME}/etc-pihole/"
-
 sync
 
 _log_to_file "Finished cloning fresh copy from github $GITHUB_REPO_OWNER/${GITHUB_REPO_NAME}."
