@@ -477,7 +477,7 @@ SSH_BACKUP_PUB_KEY="https://raw.githubusercontent.com/xorenio/ssh/main/id_ed2551
 GIT_EMAIL="john@xoren.io"
 GIT_NAME="John J"
 EOF
-    chmod 770 "$HOME/.${GITHUB_REPO_NAME}"
+    chmod 770 "$HOME"/."${GITHUB_REPO_NAME}"
     _log_info "Writen env vars file $HOME/.${GITHUB_REPO_NAME}"
 }
 
@@ -494,6 +494,8 @@ _replace_secrets_vars() {
     if [[ ! -f "$HOME/.${GITHUB_REPO_NAME}" ]]; then
         _write_secrets_file
     fi
+    ## Remove any windows line endings
+    sed -i 's/\r//g' "$HOME"/."${GITHUB_REPO_NAME}"
     ## PROPERGATE ENV FILE
     [[ ! -f "$HOME"/"${GITHUB_REPO_NAME}"/.env ]] && cp "$HOME"/"${GITHUB_REPO_NAME}"/.env."$DEPLOYMENT_ENV" "$HOME"/"${GITHUB_REPO_NAME}"/.env
 

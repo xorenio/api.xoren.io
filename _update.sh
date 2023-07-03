@@ -161,22 +161,22 @@ fi
 
 ## LAST FILE PERMS FIX
 _log_info "Last file perms fix"
-if [[ -f "$HOME/${GITHUB_REPO_NAME}/docker-compose.${DEPLOYMENT_ENV}.yml" ]]; then
-    docker-compose -f "docker-compose.${DEPLOYMENT_ENV}.yml" run --user root --rm laravel chown "$APP_USER" /var/www/ -R
+if [[ -f "$HOME"/"${GITHUB_REPO_NAME}"/docker-compose."${DEPLOYMENT_ENV}".yml ]]; then
+    docker-compose -f docker-compose."${DEPLOYMENT_ENV}".yml run --user root --rm laravel chown "$APP_USER" /var/www/ -R
 else
-    docker-compose run --user root --rm laravel chown "$APP_USER" /var/www/ -R
+    docker-compose run --user root --rm laravel chown "${APP_USER}" /var/www/ -R
 fi
 
 ## RESET APP LOG FILES
 _log_info "Added deployment date to laravel logs"
 
-for file in "$HOME/${GITHUB_REPO_NAME}/laravel/storage/logs/*.log"; do
+for file in "$HOME"/"${GITHUB_REPO_NAME}"/laravel/storage/logs/*.log; do
     echo "" >> "$file";
     echo "DEPLOYMENT DATESTAMP: ${NOWDATESTAMP}" >> "$file";
     echo "" >> "$file";
     chmod 777 "$file";
 done
-for file in "$HOME/${GITHUB_REPO_NAME}/laravel/storage/logs/supervisord/*.log"; do z
+for file in "$HOME"/"${GITHUB_REPO_NAME}"/laravel/storage/logs/supervisord/*.log; do
     echo "" >> "$file";
     echo "DEPLOYMENT DATESTAMP: ${NOWDATESTAMP}" >> "$file";
     echo "" >> "$file";
@@ -189,8 +189,8 @@ if [[ "$SCREEN_IS_PRESENT" == "true" ]]; then
    done
 fi
 
-if [[ -f "$HOME/${GITHUB_REPO_NAME}/docker-compose.${DEPLOYMENT_ENV}.yml" ]]; then
-    docker-compose -f "docker-compose.${DEPLOYMENT_ENV}.yml" up -d --buld
+if [[ -f "$HOME"/"${GITHUB_REPO_NAME}"/docker-compose."${DEPLOYMENT_ENV}".yml ]]; then
+    docker-compose -f docker-compose."${DEPLOYMENT_ENV}".yml up -d
 else
-    docker-compose up -d --build
+    docker-compose up -d
 fi
