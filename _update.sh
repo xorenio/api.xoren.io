@@ -104,7 +104,7 @@ cd "$HOME/${GITHUB_REPO_NAME}"
 
 ## REPLACE ENV FILES
 _log_to_file "Moving project secrets in to .env file."
-_replace_secrets_vars
+_replace_env_project_secrets
 
 _log_info "Finished updated project files."
 _log_to_file ""
