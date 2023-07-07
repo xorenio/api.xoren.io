@@ -1,13 +1,9 @@
 #!/bin/bash
 
-#
-# @author admin@xoren.io
-# @description Script to setup a kvm for hosting
-# @link https://github.com/xorenio
-#
-
-
-
+# Author: admin@xoren.io
+# Script: deploy-cli.sh
+# Link https://github.com/xorenio
+# Description: Script to manage the last mile deployment.
 
 # START - Script setup and configs
 
@@ -15,11 +11,13 @@ NOWDATESTAMP=$(date "+%Y-%m-%d_%H-%M-%S")
 SCRIPT_NAME=$(basename "$(test -L "$0" && readlink "$0" || echo "$0")" | sed 's/\.[^.]*$//')
 SCRIPT=$(basename "$(test -L "$0" && readlink "$0" || echo "$0")")
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-SCRIPT_DIR_NAME="$(basename $PWD)"
+SCRIPT_DIR_NAME="$(basename "$PWD")"
 SCRIPT_DEBUG=false # true AKA echo to console | false echo to log file
 SCRIPT_CMD_ARG=("${@:1}")  # Assign command line arguments to array
+FUNCTION_ARG=("${@:2}")  # Assign command line arguments to array
 
-cd $SCRIPT_DIR
+STARTING_LOCATION="$(pwd)"
+cd "$SCRIPT_DIR" || exit
 
 DEPLOYMENT_ENV_LOCATION=false
 DEPLOYMENT_ENV="production"
@@ -52,7 +50,7 @@ source "$SCRIPT_DIR/_functions.sh"
 # START - SCRIPT PRE-CONFIGURE
 
 ## SET LOGGING TO TTY OR TO deployment.log
-if [[ "$(_interactive_shell)" = "true" ]]; then
+if [[ "$(_interactive_shell)" = "1" ]]; then
     if [ "$APT_IS_PRESENT" ]; then
         export DEBIAN_FRONTEND=noninteractive
     fi
@@ -61,12 +59,12 @@ else
     SCRIPT_DEBUG=true
 fi
 
-if [[ "$CURL_IS_PRESENT" = "false" ]]; then
+if [[ "$CURL_IS_PRESENT" != "1" ]]; then
     _log_error "Please install curl."
     exit
 fi
 
-if [[ "$WHOIS_IS_PRESENT" = "false" ]]; then
+if [[ "$WHOIS_IS_PRESENT" != "1" ]]; then
     _log_error "Please install whois."
     exit
 fi
@@ -87,11 +85,8 @@ _check_running_file
 ## ECHO STARTTIME TO DEPLOYMENT LOG FILE
 _create_running_file
 
-## ENTER PROJECT DIRECTORY
-cd "$SCRIPT_DIR"
-
 ## CHECK FOR PROJECT VAR FILE
-_check_secrets_file
+_check_project_secrets
 
 
 ## SET DEPLOY ENV VAR TO LOCATION
@@ -106,11 +101,12 @@ if [[ ! -f "$HOME"/"${GITHUB_REPO_NAME}"/.env ]]; then
     cp "$HOME"/"${GITHUB_REPO_NAME}"/.env."${DEPLOYMENT_ENV}" "$HOME"/"${GITHUB_REPO_NAME}"/.env
 fi
 
-## LOAD .env VARS and GITHUB TOKEN AND SECRETS
-# _log_info "Loading .env & github var"
+## LOAD .env VARS
+# shellcheck disable=SC1090
 source "$HOME"/"${GITHUB_REPO_NAME}"/.env
+
 ## SECRETS
-_load_secrets_file
+_load_project_secrets
 
 # END - SCRIPT PRE-CONFIGURE
 
@@ -130,7 +126,7 @@ if [[ ${#SCRIPT_CMD_ARG} -ge 1 ]]; then
         "repo:update")
             _log_info ""
             _log_info "================================="
-            _log_info "\/ Manually re-install started \/"
+            _log_info "\/ Manually started re-install \/"
             _log_info "================================="
             _update
             ;;
@@ -147,10 +143,17 @@ if [[ ${#SCRIPT_CMD_ARG} -ge 1 ]]; then
             _write_secrets_file
             ;;
         "version:local")
-            _log_info "Local version: $APP_VERSION"
+            _log_info "Local version: $DEPLOYMENT_VERSION"
             ;;
         "version:remote")
-            _get_project_remote_version
+            _log_info "Github version: $(_get_project_github_latest_sha)"
+            ;;
+        "write:github:token")
+            if [[ ${#SCRIPT_CMD_ARG} -ge 2 ]]; then
+                _write_github_token "${FUNCTION_ARG[@]}"
+            else
+                _write_github_token
+            fi
             ;;
     esac
 
@@ -181,9 +184,28 @@ else
         _log_console "    - Print the local version of this repo."
         _log_console "version:remote"
         _log_console "    - Print the local and remote versions of the repo."
+    else
+        cat <<EOF
+USAGE -- ${SCRIPT} [option]
+
+Usage options:
+
+repo:check                                  Check deployment updates.
+repo:update                                 Manually start an update.
+
+setup                                       All setup steps and install:deps also update cron.
+setup:git:profile                           Set up git name and email.
+setup:secrets                               Create secrets file outside of repo folder.
+setup:ssh:keys                              Add SSH keys from .env file.
+
+version:local                               Print the local version of this repo.
+version:remote                              Print the local and remote versions of the repo.
+
+write:github:token                          To setup the local GitHub token.
+
+EOF
     fi
 fi
-
 
 _delete_running_file
 

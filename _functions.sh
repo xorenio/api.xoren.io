@@ -1,10 +1,9 @@
 #!/bin/bash
 
-#
-# @author admin@xoren.io
-# @description Script functions
-# @link https://github.com/xorenio
-#
+# Author: admin@xoren.io
+# Script: _functions.sh
+# Link https://github.com/xorenio
+# Description: Functions script.
 
 # Defaulting variables
 NOWDATESTAMP="${NOWDATESTAMP:-$(date "+%Y-%m-%d_%H-%M-%S")}"
@@ -13,6 +12,8 @@ SCRIPT="${SCRIPT:-$(basename "$(test -L "$0" && readlink "$0" || echo "$0")")}"
 SCRIPT_DIR="${SCRIPT_DIR:-$(cd "$(dirname "$0")" && pwd)}"
 SCRIPT_DIR_NAME="${SCRIPT_DIR_NAME:-$(basename $PWD)}"
 SCRIPT_DEBUG=${SCRIPT_DEBUG:-false}
+
+STARTING_LOCATION=${STARTING_LOCATION:-"$(pwd)"}
 
 DEPLOYMENT_ENV_LOCATION=${DEPLOYMENT_ENV_LOCATION:-false}
 DEPLOYMENT_ENV=${DEPLOYMENT_ENV:-"production"}
@@ -82,10 +83,10 @@ _log_data() {
     if [[ $# -eq 2 ]]; then
         message="[$1] $2"
     else
-        message=" $1"
+        message="$1"
     fi
 
-    if [[ "$SCRIPT_DEBUG" = "true" ]]; then
+    if [[ "$(_interactive_shell)" = "1" ]]; then
         # Log to the console if debug mode is enabled
         _log_console "[$(date "+%Y-%m-%d_%H-%M-%S")]$message"
     fi
@@ -101,7 +102,9 @@ _log_data() {
 # Returns: None
 
 _log_to_file() {
-    [[ ! -f "${SCRIPT_LOG_FILE}" ]] && echo "$1" > "${SCRIPT_LOG_FILE}" || echo "$1" >> "${SCRIPT_LOG_FILE}"
+    if [[ ! -f "${SCRIPT_LOG_FILE}" ]]; then echo "$1" > "${SCRIPT_LOG_FILE}"
+    else echo "$1" >> "${SCRIPT_LOG_FILE}"
+    fi
 }
 
 # Function: _log_console
@@ -152,11 +155,22 @@ _delete_running_file() {
     if [[ -f "${SCRIPT_RUNNING_FILE}" ]]; then
         rm "${SCRIPT_RUNNING_FILE}"
     fi
-    # _log_info "Finished script."
-    exit;
+
+    cd "${STARTING_LOCATION}" || cd "$HOME" || return
 }
 
 # END - RUNNING FILE
+
+# Function: _exit_script
+# Description: Graceful exiting of script.
+# Parameters: None
+# Returns: None
+
+_exit_script() {
+    _delete_running_file
+    cd "${STARTING_LOCATION}" || exit
+    exit;
+}
 
 
 
@@ -223,9 +237,10 @@ _wait_pid_expirer() {
 # Returns: None
 
 _install_cronjob() {
+
     if [[ $# -lt 2 ]]; then
      _log_info "Missing arguments <$(echo "$1" || echo "schedule")> <$([ ${#2} -ge 1 ] && echo "$2" || echo "command")>"
-     _delete_running_file;
+     _exit_script;
     fi
 
     # Define the cron job entry
@@ -233,7 +248,7 @@ _install_cronjob() {
     local cron_job=$2
     local cron_file="/tmp/.temp_cron"
 
-    _log_info "Installing cronjob: ${cron_job}"
+    _log_info "Installing Cron job: ${cron_job}"
 
     # Load the existing crontab into a temporary file
     crontab -l > "$cron_file"
@@ -249,7 +264,7 @@ _install_cronjob() {
         if [[ $? -eq 0 ]]; then
             _log_info "Cron job installed successfully."
         else
-            _log_error "Failed to install cronjob: $cron_schedule $cron_job"
+            _log_error "Cron job installation failed: $cron_schedule $cron_job"
         fi
     else
         _log_info "Cron job already exists."
@@ -259,17 +274,17 @@ _install_cronjob() {
     rm "$cron_file"
 }
 
-# Function: _uninstall_cronjob
+# Function: _remove_cronjob
 # Description: Uninstalls a cron job from the crontab.
 # Parameters:
 #   $1: The cron schedule for the job. "* * * * * "
 #   $2: The command of the job. "/bin/bash command-to-be-executed"
 # Returns: None
 
-_uninstall_cronjob() {
+_remove_cronjob() {
     if [[ $# -lt 2 ]]; then
      _log_info "Missing arguments <$(echo "$1" || echo "schedule")> <$([ ${#2} -ge 1 ] && echo "$2" || echo "command")>"
-     _delete_running_file;
+     _exit_script;
     fi
 
     # Define the cron job entry
@@ -278,6 +293,7 @@ _uninstall_cronjob() {
     local cron_file="/tmp/.temp_cron"
 
     _log_info "Uninstalling cronjob: ${cron_job}"
+
 
     # Load the existing crontab into a temporary file
     crontab -l > _temp_cron
@@ -302,7 +318,6 @@ _uninstall_cronjob() {
     # Remove the temporary file
     rm "$cron_file"
 }
-
 
 # Function: _install_authorized_key
 # Description: Installs an SSH public key in the authorized_keys file.
@@ -342,13 +357,18 @@ _install_authorized_key() {
 
 # START - HELPER VARIABLES
 
+# shellcheck disable=SC2034
 APT_IS_PRESENT="$(_is_present apt-get)"
+# shellcheck disable=SC2034
 YUM_IS_PRESENT="$(_is_present yum)"
+# shellcheck disable=SC2034
 PACMAN_IS_PRESENT="$(_is_present pacman)"
+# shellcheck disable=SC2034
 SCREEN_IS_PRESENT="$(_is_present screen)"
+# shellcheck disable=SC2034
 WHOIS_IS_PRESENT="$(_is_present whois)"
+# shellcheck disable=SC2034
 CURL_IS_PRESENT="$(_is_present curl)"
-
 # END - HELPER VARIABLES
 
 
@@ -374,9 +394,8 @@ elif [ "$ZYPPER_IS_PRESENT" ]; then
     PREREQ_PACKAGES="sudo tmux screen docker docker-compose wget whois net-tools jq htop curl git certbot python3-certbot-nginx nginx zip gzip fail2ban wget unzip bind-utils tar"
 else
     _log_error "This system doesn't appear to be supported. No supported package manager (apt/yum/pacman/zypper) was found."
-    _delete_running_file
+    exit
 fi
-
 # END - SET DISTRO VARIABLES
 
 
@@ -420,12 +439,12 @@ _set_location_var() {
 
 # START - PROJECT FUNCTIONS
 
-# Function: _check_secrets_file
+# Function: _check_project_secrets
 # Description: Checks if the secrets file exists and prompts user to create it if it doesn't exist.
 # Parameters: None
 # Returns: None
 
-_check_secrets_file() {
+_check_project_secrets() {
     if [[ ! -f "$HOME/.${GITHUB_REPO_NAME}" ]]; then
 
         _log_error ""
@@ -434,31 +453,31 @@ _check_secrets_file() {
         _log_error "Missing twisted var file $HOME/.${GITHUB_REPO_NAME}"
 
         if [[ "$(_interactive_shell)" = "true" ]]; then
-            read -rp "Do you want to continue? [Y/n] (empty: cancel): " write_file
+            read -rp "Write secrets file? [Y/n] (empty: no): " write_file
             if [[ $write_file =~ ^(Yes|yes|y)$ ]]; then
-                _write_secrets_file
-                exit
+                _write_project_secrets
             fi
         fi
-        _delete_running_file
+        _exit_script
     fi
 }
 
-# Function: _load_secrets_file
+# Function: _load_project_secrets
 # Description: Checks if the secrets file exists and load it.
 # Parameters: None
 # Returns: None
 
-_load_secrets_file() {
-    [[ -f "$HOME/.${GITHUB_REPO_NAME}" ]] && source "$HOME/.${GITHUB_REPO_NAME}"
+_load_project_secrets() {
+    # shellcheck disable=SC1090
+    [[ -f "$HOME/.${GITHUB_REPO_NAME}" ]] && source "$HOME/.${GITHUB_REPO_NAME}" ##|| echo 0
 }
 
-# Function: _write_secrets_file
+# Function: _write_project_secrets
 # Description: Writes environment variables to a file in the user's home directory.
 # Parameters: None
 # Returns: None
 
-_write_secrets_file() {
+_write_project_secrets() {
 
     cat > "$HOME/.${GITHUB_REPO_NAME}" <<EOF
 # Deployment
@@ -481,25 +500,23 @@ EOF
     _log_info "Writen env vars file $HOME/.${GITHUB_REPO_NAME}"
 }
 
-# Function: _replace_secrets_vars
+# Function: _replace_env_project_secrets
 # Description: Replaces the environment variables in the configuration file with their corresponding values.
 # Parameters: None
 # Returns: None
-
-_replace_secrets_vars() {
+_replace_env_project_secrets() {
 
     _log_info "START: Replacing APP environment variables"
 
     ## CHECK IF FILE DOESNT EXIST AND CREATE IT
     if [[ ! -f "$HOME/.${GITHUB_REPO_NAME}" ]]; then
-        _write_secrets_file
+        _write_project_secrets
     fi
-    ## Remove any windows line endings
     sed -i 's/\r//g' "$HOME"/."${GITHUB_REPO_NAME}"
     ## PROPERGATE ENV FILE
-    [[ ! -f "$HOME"/"${GITHUB_REPO_NAME}"/.env ]] && cp "$HOME"/"${GITHUB_REPO_NAME}"/.env."$DEPLOYMENT_ENV" "$HOME"/"${GITHUB_REPO_NAME}"/.env
+    [[ ! -f "$HOME/${GITHUB_REPO_NAME}/.env" ]] && cp "$HOME/${GITHUB_REPO_NAME}/.env.$DEPLOYMENT_ENV" "$HOME/${GITHUB_REPO_NAME}/.env"
 
-    sync;
+    sync -d "$HOME/${GITHUB_REPO_NAME}/.env"
 
     local first_letter name value;
     ## READ EACH LINE OF CONFIG FILE
@@ -517,6 +534,7 @@ _replace_secrets_vars() {
                 value=$(echo "$CONFIGLINE" | cut -d '=' -f 2-)
                 while grep -F "\"<$name>\"" "$HOME/${GITHUB_REPO_NAME}/.env" &>/dev/null; do
                     sed -i "s|\"<$name>\"|$value|" "$HOME/${GITHUB_REPO_NAME}/.env"
+                    sync -d "$HOME/${GITHUB_REPO_NAME}/.env"
                     sleep 1
                 done
             fi
@@ -525,88 +543,160 @@ _replace_secrets_vars() {
 
     ## REPLACED DEPLOYMENT VARS
     while grep -F "\"<DEPLOYMENT_VERSION>\"" "$HOME/${GITHUB_REPO_NAME}/.env" &>/dev/null; do
-        sed -i "s|\"<DEPLOYMENT_VERSION>\"|$NEW_VERSION|" "$HOME/${GITHUB_REPO_NAME}/.env"
+        sed -i "s|\"<DEPLOYMENT_VERSION>\"|$LATEST_PROJECT_SHA|" "$HOME/${GITHUB_REPO_NAME}/.env"
+        sync -d "$HOME/${GITHUB_REPO_NAME}/.env"
         sleep 1
     done
     sed -i "s|\"<DEPLOYMENT_AT>\"|$NOWDATESTAMP|" "$HOME/${GITHUB_REPO_NAME}/.env"
+    sync -d "$HOME/${GITHUB_REPO_NAME}/.env"
 
 
     _log_info "END: Replacing APP environment variables"
 }
 
-# Function: _get_project_remote_version
-# Description: Wrapper and setup for fetching the version from the remote repository.
+# END - PROJECT FUNCTIONS
+
+
+
+
+# START - UPDATE CRONJOB
+
+# Function: _setup_update_cron
+# Description: Sets up the update project cronjob.
 # Parameters: None
-# Returns: None
+# Returns:
+#   0 if failed cronjob install.
 
-_get_project_remote_version() {
-
-    ## CHECK FOR GITHUB TOKEN
-    if [[ ! -f "$HOME/.github_token" ]]; then
-
-        _log_error ""
-        _log_error "Failed deployment ${NOWDATESTAMP}"
-        _log_error ""
-        _log_error "Missing github token file .github_token"
-        _log_error "GITHUB_TOKEN=ghp_####################################"
-        _log_error "public_repo, read:packages, repo:status, repo_deployment"
-
-        _delete_running_file
-    fi
-
-    source "$HOME/.github_token"
-
-    _log_info "Getting remote version"
-
-    _get_project_version_via_repo
-
-    _log_info "Local version: $DEPLOYMENT_VERSION"
-    _log_info "Github version: $NEW_VERSION"
+_install_update_cron() {
+    # shellcheck disable=SC2005
+    echo "$(_install_cronjob "*/5 * * * *" "/bin/bash $HOME/${GITHUB_REPO_NAME}/${SCRIPT} repo:check")"
 }
 
-# Function: _get_project_version_via_repo
-# Description: Uses curl to make an HTTP request with a token and sets the NEW_VERSION variable.
+# Function: _install_update_cron
+# Description: Sets up the update project cronjob.
 # Parameters: None
-# Returns: None
+# Returns:
+#   0 if failed cronjob uninstall.
 
-_get_project_version_via_repo() {
+_remove_update_cron() {
+    # shellcheck disable=SC2005
+    echo "$(_remove_cronjob "*/5 * * * *" "/bin/bash $HOME/${GITHUB_REPO_NAME}/${SCRIPT} repo:check")"
+}
+# END - UPDATE CRONJOB
 
-    ## SEND REQUEST TO GITHUB FOR REPOSOTORY REPO DATA
-    _log_info "Sending request to github API for package data"
-    local curl_data;
+
+
+
+# START - GITHUB TOKEN
+
+# Function: _check_github_token
+# Description: Check $GITHUB_TOKEN variable has been set and matches the github personal token pattern
+# Parameters: None
+# Returns:
+#   1 if successfully loaded github token and matches pattern
+
+_check_github_token() {
+    pattern="^ghp_[a-zA-Z0-9]{36}$"
+    [[ ${GITHUB_TOKEN:-"ghp_##"} =~ $pattern ]] && echo 1;
+}
+
+# Function: _check_github_token_file
+# Description: Check the location for the github token file.
+# Parameters: None
+# Returns:
+#   1 if github token file exists, otherwise 0.
+
+_check_github_token_file() {
+    [[ -f "$HOME/.github_token" ]] && echo 1
+}
+
+# Function: _load_github_token
+# Description: If github token already has been loaded or check and loads from file then validate.
+# Parameters: None
+# Returns:
+#   1 if github token already loaded or loads token from file and matches pattern, otherwise 0.
+
+_load_github_token() {
+    if [[ $(_check_github_token) = "1" ]]; then
+        return
+    fi
+
+    if [[ "$(_check_github_token_file)" = "1" ]]; then
+        # shellcheck source=/dev/null
+        source "$HOME/.github_token" || echo "Failed import of github_token"
+    fi
+}
+
+# Function: _write_github_token
+# Description: Given a gh token or from user prompt, validate and creates .github_token file.
+# Parameters:
+#   $1: optional github token
+# Returns:
+#   1 if successfully installed github token.
+
+#shellcheck disable=SC2120
+_write_github_token() {
+    pattern="^ghp_[a-zA-Z0-9]{36}$"
+    local token;
+
+    if [[ $# -ge 1 ]]; then
+        token=$1
+    elif [[ "$(_interactive_shell)" = "1" ]]; then
+        read -rp "Please provide? [Y/n] (empty: cancel): " input_token
+        token="$input_token"
+        if [[ ! $token =~ $pattern ]]; then
+            # _log_error "Missing github token file .github_token"
+            _log_error "GITHUB_TOKEN=ghp_azAZ09azAZ09azAZ09azAZ09azAZ09azAZ09"
+            _log_error "public_repo, read:packages, repo:status, repo_deployment"
+            _log_error "Invalid github personal access token."
+            _exit_script
+        fi
+    fi
+    if [[ $token =~ $pattern ]]; then
+        echo "#" > "$HOME"/.github_token
+        echo "GITHUB_TOKEN=$token" >> "$HOME"/.github_token
+        echo "" >> "$HOME"/.github_token
+        chmod 700 "$HOME"/.github_token
+        _load_github_token
+        echo 1
+    else
+        _log_error "Invalid github personal access token."
+        _exit_script
+    fi
+}
+# END - GITHUB TOKEN
+
+
+
+
+# START - GITHUB API
+
+_get_project_github_latest_sha() {
+
+    _load_github_token
+    if [[ "$(_check_github_token)" = "0" ]]; then
+        _write_github_token
+    fi
+
+    local curl_data gh_sha;
     curl_data=$( curl -s -H "Accept: application/vnd.github+json" \
         -H "X-GitHub-Api-Version:2022-11-28" \
         -H "Authorization: Bearer $GITHUB_TOKEN" \
         "$GITHUB_REPO_URL")
 
-    if [[ $? -eq 0 ]]; then
-        NEW_VERSION=$(echo "$curl_data" | jq .[0].commit.tree.sha)
-    else
-        _log_error "Curl ${GITHUB_REPO_URL}"
-        _delete_running_file
+    if [[ $(echo "$curl_data" | jq -r .message 2> /dev/null && echo 1) ]]; then
+        _log_error "$(echo "$curl_data" | jq .message)"
+        echo 0;
+        return;
+    fi
+
+    if [[ $(echo "$curl_data" | jq -r .[0].commit.tree.sha 2> /dev/null && echo 1) ]]; then
+        gh_sha="$(echo "$curl_data" | jq .[0].commit.tree.sha)"
+        echo "${gh_sha//\"}"
+        return;
     fi
 }
-
-# Function: _delete_old_project_files
-# Description: Deletes old project files.
-# Parameters: None
-# Returns: None
-
-_delete_old_project_files() {
-
-    local old_project_folder_byte_size
-    old_project_folder_byte_size=$(du "$HOME/${GITHUB_REPO_NAME}_${NOWDATESTAMP}" -sc | grep total)
-
-    old_project_folder_byte_size=${old_project_folder_byte_size/" "/""}
-    old_project_folder_byte_size=${old_project_folder_byte_size/" "/""}
-
-    if [[ old_project_folder_byte_size -le 1175400 ]]; then
-        echo "Not yet"
-        # rm -R
-    fi
-}
-
-# END - PROJECT FUNCTIONS
+# END - GITHUB API
 
 
 
@@ -624,6 +714,7 @@ _update() {
 
     if [[ -f "$HOME/${GITHUB_REPO_NAME}/_update.sh" ]]; then
 
+        # shellcheck disable=SC1090
         source "$HOME/${GITHUB_REPO_NAME}/_update.sh"
     else
 
@@ -633,7 +724,7 @@ _update() {
         _log_to_file "env: ${DEPLOYMENT_ENV}"
 
         ## LEAVE PROJECT DIRECTORY
-        cd "$HOME"
+        cd "$HOME" || _exit_script
 
         ## RENAME OLD PROJECT DIRECTORY
         _log_to_file "Moving old project folder."
@@ -656,12 +747,9 @@ _update() {
 
         _log_to_file "Finished cloning fresh copy from github ${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}."
 
-        # logInfo "cd to updated local project files"
-        cd "$HOME/${GITHUB_REPO_NAME}"
-
         ## REPLACE ENV FILES
         _log_to_file "Moving project secrets in to .env file."
-        _replace_secrets_vars
+        _replace_env_project_secrets
 
         _log_info "Finished updated project files."
         _log_to_file ""
@@ -676,94 +764,55 @@ _update() {
 # Returns: None
 
 _check_update() {
-    _get_project_remote_version
+    LATEST_PROJECT_SHA="$(_get_project_github_latest_sha)"
+
+    if [[ "${LATEST_PROJECT_SHA}" = "0" ]]; then
+        _log_error "Failed to fetching SHA from api.github.com"
+        _exit_script
+    fi
 
     ## CHECK FOR DEFAULT VARS
-    if [[ $DEPLOYMENT_VERSION == '"<DEPLOYMENT_VERSION>"' ]]; then
+    if [[ "${DEPLOYMENT_VERSION}" = "<DEPLOYMENT_VERSION>" ]]; then
 
         ## replace with requested data version
         _log_error "Current version <DEPLOYMENT_VERSION> AKA deployment failure somewhere"
-        sed -i 's|"<DEPLOYMENT_VERSION>"|'${NEW_VERSION}'|' "$HOME/${GITHUB_REPO_NAME}/.env"
+        sed -i 's|"<DEPLOYMENT_VERSION>"|'${LATEST_PROJECT_SHA}'|' "$HOME/${GITHUB_REPO_NAME}/.env"
+    elif [[ "${DEPLOYMENT_VERSION}" = "DEV" ]]; then
+
+        _log_error "Updating is disabled in development"
     else
 
         ## IF LOCAL VERSION AND REMOTE VERSION ARE THE SAME
-        if [[ ${DEPLOYMENT_VERSION} == ${NEW_VERSION} ]]; then
+        if [[ "${DEPLOYMENT_VERSION}" = "${LATEST_PROJECT_SHA}" ]]; then
 
             _log_info "VERSION MATCH, ending script"
-            _delete_running_file
+            _exit_script
         fi
         _update
-        sed -i 's|"<DEPLOYMENT_VERSION>"|'${NEW_VERSION}'|' "$HOME/${GITHUB_REPO_NAME}/.env"
+        sed -i 's|"<DEPLOYMENT_VERSION>"|'${LATEST_PROJECT_SHA}'|' "$HOME/${GITHUB_REPO_NAME}/.env"
     fi
 }
 
+# Function: _delete_old_project_files
+# Description: Deletes old project files.
+# Parameters: None
+# Returns: None
+
+_delete_old_project_files() {
+
+    local old_project_folder_byte_size
+    old_project_folder_byte_size=$(du "$HOME/${GITHUB_REPO_NAME}_${NOWDATESTAMP}" -sc | grep total)
+
+    old_project_folder_byte_size=${old_project_folder_byte_size/" "/""}
+    old_project_folder_byte_size=${old_project_folder_byte_size/" "/""}
+
+    if [[ old_project_folder_byte_size -le 1175400 ]]; then
+        echo "Not yet"
+        # rm -R
+    fi
+}
 # END - UPDATE FUNCTIONS
 
-
-
-
-# START - SETUP
-
-# Function: _setup
-# Description: Sets up the Linux environment for hosting.
-# Parameters: None
-# Returns: None
-
-_setup() {
-
-    _install_cronjob "*/5 * * * *" "/bin/bash $HOME/${GITHUB_REPO_NAME}/main-cli.sh repo:check"
-    _setup_ssh_key
-    _setup_git
-}
-
-# Function: _setup_ssh_key
-# Description: Sets up an ED25519 ssh key for the root user.
-# Parameters: None
-# Returns: None
-
-_setup_ssh_key() {
-
-    _log_info "Checking ssh key"
-    local first_key second_key;
-
-    if [[ ! -f "$HOME/.ssh/id_ed25519" ]]; then
-        _log_info "Creating ed25519 ssh key"
-        ssh-keygen -t ed25519 -N "" -C "${GIT_EMAIL}" -f "$HOME/.ssh/id_ed25519"  > /dev/null 2>&1
-        _log_info "Public: $(cat "$HOME/.ssh/id_ed25519.pub")"
-        eval "$(ssh-agent -s)"
-        ssh-add "$HOME/.ssh/id_ed25519"
-    fi
-
-    # Download the file
-    curl -sSf "$SSH_PUB_KEY" -o "/tmp/FIRST_KEY.pub"
-    curl -sSf "$SSH_BACKUP_PUB_KEY" -o "/tmp/SECOND_KEY.pub"
-
-    # Read the content of the downloaded file
-    first_key=$(cat "/tmp/FIRST_KEY.pub")
-    second_key=$(cat "/tmp/SECOND_KEY.pub")
-
-    _install_authorized_key "$first_key"
-    _install_authorized_key "$second_key"
-
-    # Clean up the temporary file
-    rm "/tmp/FIRST_KEY.pub"
-    rm "/tmp/SECOND_KEY.pub"
-}
-
-
-# Function: _setup_git
-# Description: Sets up the local git profile by configuring user name and email.
-# Parameters: None
-# Returns: None
-
-_setup_git() {
-    _log_info "Setup local git profile"
-
-    git config --global user.name "${GIT_NAME}"
-    git config --global user.email "${GIT_EMAIL}"
-}
-
-# END -SETUP
 
 
 
@@ -797,3 +846,71 @@ _setup_git() {
 # complete -F _script_completion "${SCRIPT}"
 
 # END - COMPLETION
+
+
+
+
+# START - SETUP
+
+# Function: _setup
+# Description: Sets up the Linux environment for hosting.
+# Parameters: None
+# Returns: None
+
+_setup() {
+
+    _install_cronjob "*/5 * * * *" "/bin/bash $HOME/${GITHUB_REPO_NAME}/${SCRIPT} repo:check"
+    _setup_ssh_key
+    _setup_git
+}
+
+# Function: _setup_ssh_key
+# Description: Sets up an ED25519 ssh key for the root user.
+# Parameters: None
+# Returns: None
+
+_setup_ssh_key() {
+    _log_info "Setting up ssh keys"
+
+    local first_key second_key;
+
+    if [[ ! -f "$HOME/.ssh/id_ed25519" ]]; then
+        _log_info "Creating ed25519 ssh key"
+        ssh-keygen -t ed25519 -N "" -C "${GIT_EMAIL}" -f "$HOME/.ssh/id_ed25519"  > /dev/null 2>&1
+        _log_info "Public: $(cat "$HOME/.ssh/id_ed25519.pub")"
+        eval "$(ssh-agent -s)"
+        ssh-add "$HOME/.ssh/id_ed25519"
+    fi
+
+    _log_info "Loading SSH key: ${SSH_PUB_KEY}"
+    _log_info "Loading SSH key: ${SSH_BACKUP_PUB_KEY}"
+
+    curl -sSf "$SSH_PUB_KEY" -o "/tmp/FIRST_KEY.pub"
+    curl -sSf "$SSH_BACKUP_PUB_KEY" -o "/tmp/SECOND_KEY.pub"
+
+    # Read the content of the downloaded file
+    first_key=$(cat "/tmp/FIRST_KEY.pub")
+    second_key=$(cat "/tmp/SECOND_KEY.pub")
+
+    _install_authorized_key "$first_key"
+    _install_authorized_key "$second_key"
+
+    # Clean up the temporary file
+    rm "/tmp/FIRST_KEY.pub"
+    rm "/tmp/SECOND_KEY.pub"
+}
+
+
+# Function: _setup_git
+# Description: Sets up the local git profile by configuring user name and email.
+# Parameters: None
+# Returns: None
+
+_setup_git() {
+    _log_info "Setup local git profile"
+
+    git config --global user.name "${GIT_NAME}"
+    git config --global user.email "${GIT_EMAIL}"
+}
+
+# END -SETUP
