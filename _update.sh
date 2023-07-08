@@ -140,7 +140,7 @@ fi
 # docker-compose -f docker-compose.yml run --user root --rm laravel rm /laravel/public/mix-manifest.json
 
 ## INSTALL NPM PACKAGES
-# _log_info "Install nom"
+# _log_info "Install npm"
 # docker-compose -f docker-compose.yml run --rm laravel npm install
 
 ## BUILD JS TO BUNDLE

@@ -156,39 +156,14 @@ if [[ ${#SCRIPT_CMD_ARG} -ge 1 ]]; then
             fi
             ;;
     esac
-
 else
     if [[ "$(_interactive_shell)" = "0" ]]; then
         _log_error "Headless mode not setup."
     else
-        _log_console "=== Missing Command Line Argument ==="
-        _log_console ""
-
-        _log_console "repo:check"
-        _log_console "    - Check local repo version against remote and update if necessary."
-        _log_console "repo:update"
-        _log_console "    - Manually start an update of local repo files."
-
-        _log_console "setup"
-        _log_console "    - Do all the setup steps and install update cron."
-
-        _log_console "setup:git:profile"
-        _log_console "    - Set up git name and email."
-
-        _log_console "setup:ssh:keys"
-        _log_console "    - Add xorenio SSH keys from GitHub."
-        _log_console "setup:secrets"
-        _log_console "    - Create secrets file outside of repo folder."
-
-        _log_console "version:local"
-        _log_console "    - Print the local version of this repo."
-        _log_console "version:remote"
-        _log_console "    - Print the local and remote versions of the repo."
-    else
         cat <<EOF
-USAGE -- ${SCRIPT} [option]
+USAGE: ${SCRIPT} [option]
 
-Usage options:
+Options:
 
 repo:check                                  Check deployment updates.
 repo:update                                 Manually start an update.

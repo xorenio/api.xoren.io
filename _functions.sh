@@ -516,7 +516,7 @@ _replace_env_project_secrets() {
     ## PROPERGATE ENV FILE
     [[ ! -f "$HOME/${GITHUB_REPO_NAME}/.env" ]] && cp "$HOME/${GITHUB_REPO_NAME}/.env.$DEPLOYMENT_ENV" "$HOME/${GITHUB_REPO_NAME}/.env"
 
-    sync -d "$HOME/${GITHUB_REPO_NAME}/.env"
+    sync "$HOME/${GITHUB_REPO_NAME}/.env"
 
     local first_letter name value;
     ## READ EACH LINE OF CONFIG FILE
@@ -534,7 +534,7 @@ _replace_env_project_secrets() {
                 value=$(echo "$CONFIGLINE" | cut -d '=' -f 2-)
                 while grep -F "\"<$name>\"" "$HOME/${GITHUB_REPO_NAME}/.env" &>/dev/null; do
                     sed -i "s|\"<$name>\"|$value|" "$HOME/${GITHUB_REPO_NAME}/.env"
-                    sync -d "$HOME/${GITHUB_REPO_NAME}/.env"
+                    sync "$HOME/${GITHUB_REPO_NAME}/.env"
                     sleep 1
                 done
             fi
