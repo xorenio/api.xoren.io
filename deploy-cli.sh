@@ -117,9 +117,6 @@ _load_project_secrets
 ## Command line argument
 if [[ ${#SCRIPT_CMD_ARG} -ge 1 ]]; then
     case "${SCRIPT_CMD_ARG[0]}" in
-        "queue:worker")
-            _process_queue
-            ;;
         "repo:check")
             _check_update
             ;;
@@ -136,11 +133,11 @@ if [[ ${#SCRIPT_CMD_ARG} -ge 1 ]]; then
         "setup:git:profile")
             _setup_git
             ;;
-        "setup:ssh:keys")
-            _setup_ssh_key
-            ;;
         "setup:secrets")
             _write_secrets_file
+            ;;
+        "setup:ssh:keys")
+            _setup_ssh_key
             ;;
         "version:local")
             _log_info "Local version: $DEPLOYMENT_VERSION"
@@ -168,16 +165,15 @@ Options:
 repo:check                                  Check deployment updates.
 repo:update                                 Manually start an update.
 
-setup                                       All setup steps and install:deps also update cron.
+setup                                       Setup steps and update cron.
 setup:git:profile                           Set up git name and email.
-setup:secrets                               Create secrets file outside of repo folder.
+setup:secrets                               Create secrets file outside of repo.
 setup:ssh:keys                              Add SSH keys from .env file.
 
 version:local                               Print the local version of this repo.
-version:remote                              Print the local and remote versions of the repo.
+version:remote                              Print the remote versions of the repo.
 
 write:github:token                          To setup the local GitHub token.
-
 EOF
     fi
 fi

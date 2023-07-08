@@ -561,22 +561,20 @@ _replace_env_project_secrets() {
 
 # START - UPDATE CRONJOB
 
-# Function: _setup_update_cron
+# Function: _install_update_cron
 # Description: Sets up the update project cronjob.
 # Parameters: None
-# Returns:
-#   0 if failed cronjob install.
+# Returns: None
 
 _install_update_cron() {
     # shellcheck disable=SC2005
     echo "$(_install_cronjob "*/5 * * * *" "/bin/bash $HOME/${GITHUB_REPO_NAME}/${SCRIPT} repo:check")"
 }
 
-# Function: _install_update_cron
-# Description: Sets up the update project cronjob.
+# Function: _remove_update_cron
+# Description: Removes  the update project cronjob.
 # Parameters: None
-# Returns:
-#   0 if failed cronjob uninstall.
+# Returns: None
 
 _remove_update_cron() {
     # shellcheck disable=SC2005
@@ -859,7 +857,7 @@ _delete_old_project_files() {
 
 _setup() {
 
-    _install_cronjob "*/5 * * * *" "/bin/bash $HOME/${GITHUB_REPO_NAME}/${SCRIPT} repo:check"
+    _install_update_cron
     _setup_ssh_key
     _setup_git
 }
