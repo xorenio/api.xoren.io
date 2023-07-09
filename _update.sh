@@ -105,6 +105,7 @@ cd "$HOME/${GITHUB_REPO_NAME}"
 ## REPLACE ENV FILES
 _log_to_file "Moving project secrets in to .env file."
 _replace_env_project_secrets
+cp "$HOME/${GITHUB_REPO_NAME}/.env" "$HOME/${GITHUB_REPO_NAME}/laravel/.env"
 
 _log_info "Finished updated project files."
 _log_to_file ""
