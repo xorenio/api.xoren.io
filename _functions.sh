@@ -364,11 +364,19 @@ YUM_IS_PRESENT="$(_is_present yum)"
 # shellcheck disable=SC2034
 PACMAN_IS_PRESENT="$(_is_present pacman)"
 # shellcheck disable=SC2034
+ZYPPER_IS_PRESENT="$(_is_present zypper)"
+# shellcheck disable=SC2034
 SCREEN_IS_PRESENT="$(_is_present screen)"
 # shellcheck disable=SC2034
 WHOIS_IS_PRESENT="$(_is_present whois)"
 # shellcheck disable=SC2034
 CURL_IS_PRESENT="$(_is_present curl)"
+# shellcheck disable=SC2034
+DOCKER_IS_PRESENT="$(_is_present docker)"
+# shellcheck disable=SC2034
+JQ_IS_PRESENT="$(_is_present jq)"
+# shellcheck disable=SC2034
+YQ_IS_PRESENT="$(_is_present yq)"
 # END - HELPER VARIABLES
 
 
@@ -376,22 +384,22 @@ CURL_IS_PRESENT="$(_is_present curl)"
 
 # START - SET DISTRO VARIABLES
 
-if [ "$APT_IS_PRESENT" ]; then
+if [[ "$APT_IS_PRESENT" = "1" ]]; then
     PM_COMMAND=apt-get
     PM_INSTALL=(install -y)
-    PREREQ_PACKAGES="sudo tmux screen docker docker-compose wget whois net-tools jq htop curl git certbot python3-certbot-nginx nginx zip gzip fail2ban dirmngr software-properties-common apt-transport-https gpg-agent dnsutils unzip"
-elif [ "$YUM_IS_PRESENT" ]; then
+    PREREQ_PACKAGES="sudo tmux screen docker docker-compose wget whois net-tools jq yq htop curl git certbot python3-certbot-nginx nginx zip gzip fail2ban dirmngr software-properties-common apt-transport-https gpg-agent dnsutils unzip"
+elif [[ "$YUM_IS_PRESENT" = "1" ]]; then
     PM_COMMAND=yum
     PM_INSTALL=(-y install)
-    PREREQ_PACKAGES="sudo tmux screen docker docker-compose wget whois net-tools jq htop curl git certbot python3-certbot-nginx nginx zip gzip fail2ban wget unzip bind-utils tar"
-elif [ "$PACMAN_IS_PRESENT" ]; then
+    PREREQ_PACKAGES="sudo tmux screen docker docker-compose wget whois net-tools jq yq htop curl git certbot python3-certbot-nginx nginx zip gzip fail2ban wget unzip bind-utils tar"
+elif [[ "$PACMAN_IS_PRESENT" = "1" ]]; then
     PM_COMMAND=pacman
     PM_INSTALL=(-S --noconfirm)
-    PREREQ_PACKAGES="sudo tmux screen docker docker-compose wget whois net-tools jq htop curl git certbot nginx zip gzip fail2ban unzip dnsutils tar"
-elif [ "$ZYPPER_IS_PRESENT" ]; then
+    PREREQ_PACKAGES="sudo tmux screen docker docker-compose wget whois net-tools jq yq htop curl git certbot nginx zip gzip fail2ban unzip dnsutils tar"
+elif [[ "$ZYPPER_IS_PRESENT" = "1" ]]; then
     PM_COMMAND=zypper
     PM_INSTALL=(install -y)
-    PREREQ_PACKAGES="sudo tmux screen docker docker-compose wget whois net-tools jq htop curl git certbot python3-certbot-nginx nginx zip gzip fail2ban wget unzip bind-utils tar"
+    PREREQ_PACKAGES="sudo tmux screen docker docker-compose wget whois net-tools jq yq htop curl git certbot python3-certbot-nginx nginx zip gzip fail2ban wget unzip bind-utils tar"
 else
     _log_error "This system doesn't appear to be supported. No supported package manager (apt/yum/pacman/zypper) was found."
     exit

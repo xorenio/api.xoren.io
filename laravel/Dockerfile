@@ -53,8 +53,8 @@ RUN ln -snf /usr/share/zoneinfo/${APP_TIMEZONE} /etc/localtime && \
 
 # Install PHP extensions.
 RUN docker-php-ext-install pdo_mysql ctype exif pcntl bcmath && \
-    pecl install redis zip swoole && \
-    docker-php-ext-enable redis zip swoole
+    pecl install redis zip csv swoole && \
+    docker-php-ext-enable redis zip csv swoole
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

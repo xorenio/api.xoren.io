@@ -48,27 +48,28 @@ _log_to_file "env: ${DEPLOYMENT_ENV}"
 ## Enter project repo
 cd "$HOME/$GITHUB_REPO_NAME"
 
-## Stop running deployment
-_log_info "Stopping docker containers"
-if [[ -f "$HOME/${GITHUB_REPO_NAME}/docker-compose.${DEPLOYMENT_ENV}.yml" ]]; then
-    docker-compose -f "docker-compose.${DEPLOYMENT_ENV}.yml" down
-else
-    docker-compose down
+if [[ "$DOCKER_IS_PRESENT" = "1" ]]; then
+    DOCKER_FILE="$HOME/${GITHUB_REPO_NAME}/docker-compose.yml"
+    if [[ -f "$HOME/${GITHUB_REPO_NAME}/docker-compose.${DEPLOYMENT_ENV}.yml" ]]; then
+        DOCKER_FILE="$HOME/${GITHUB_REPO_NAME}/docker-compose.${DEPLOYMENT_ENV}.yml"
+    fi
+
+    ## Stop running deployment
+    _log_info "Stopping docker containers"
+    docker-compose -f "${DOCKER_FILE}" down
+
+    ## Remove deployment docker images
+    _log_info "Removing docker images"
+    yes | docker-compose -f "${DOCKER_FILE}" rm
+
+    ## REMOVE DOCKER IMAGES VIA NAME
+    if [[ "$YQ_IS_PRESENT" = "1" ]]; then
+        yq eval '.services[].container_name' "${DOCKER_FILE}" |
+        while IFS= read -r container_name; do
+            yes | docker image rm "${container_name//\"}"
+        done
+    fi
 fi
-
-## Remove deployment docker images
-_log_info "Removing docker images"
-if [[ -f "$HOME/${GITHUB_REPO_NAME}/docker-compose.${DEPLOYMENT_ENV}.yml" ]]; then
-    yes | docker-compose -f "docker-compose.${DEPLOYMENT_ENV}.yml" rm #--all # dep
-else
-    yes | docker-compose rm #--all # dep
-fi
-
-## REMOVE DOCKER IMAGES VIA NAME
-yes | docker image rm xoren-io-laravel
-yes | docker image rm xoren-io-nginx
-yes | docker image rm xoren-io-websocket
-
 ## LEAVE PROJECT DIRECTORY
 cd "$HOME"
 
@@ -110,75 +111,63 @@ cp "$HOME/${GITHUB_REPO_NAME}/.env" "$HOME/${GITHUB_REPO_NAME}/laravel/.env"
 _log_info "Finished updated project files."
 _log_to_file ""
 
-if [[ -f "$HOME/${GITHUB_REPO_NAME}/docker-compose.${DEPLOYMENT_ENV}.yml" ]]; then
-    docker-compose -f "docker-compose.${DEPLOYMENT_ENV}.yml" up -d --build
-else
-    docker-compose up -d --build
-fi
+if [[ "$DOCKER_IS_PRESENT" = "1" ]]; then
+    docker-compose -f "${DOCKER_FILE}" up -d --build
 
-## CHANGE FILES AROUND 2FOR INSTALLING
-_log_info "Change files around for installing"
-# docker-compose -f docker-compose.yml run --user root --rm laravel chmod 777 /var/www/ -R
-docker-compose -f docker-compose.yml run --user root --rm laravel chown "$APP_USER" /var/www/ -R
+    ## CHANGE FILES AROUND 2FOR INSTALLING
+    _log_info "Change files around for installing"
+    # docker-compose -f docker-compose.yml run --user root --rm laravel chmod 777 /var/www/ -R
+    docker-compose -f docker-compose.yml run --user root --rm laravel chown "$APP_USER" /var/www/ -R
+    docker-compose -f "${DOCKER_FILE}" run --user root --rm laravel chown "$APP_USER" /var/www/ -R
 
-## INSTALL PHP DEPS
-_log_info "Installing php deps"
-if [[ -f "$HOME/${GITHUB_REPO_NAME}/docker-compose.${DEPLOYMENT_ENV}.yml" ]]; then
-    docker-compose -f "docker-compose.${DEPLOYMENT_ENV}.yml" run --rm laravel composer install --no-dev
-    docker-compose -f "docker-compose.${DEPLOYMENT_ENV}.yml "run --rm laravel composer update
-else
-    docker-compose run --rm laravel composer install --no-dev
-    docker-compose run --rm laravel composer update
-fi
+    ## INSTALL PHP DEPS
+    _log_info "Installing php deps"
+    docker-compose -f "${DOCKER_FILE}" run --rm laravel composer install --no-dev
+    docker-compose -f "${DOCKER_FILE}" run --rm laravel composer update
 
-## CHANGE FILE PERMS
-# _log_info "Change file perms"
-# docker-compose -f docker-compose.yml run --rm laravel php artisan queue:flush
-# docker-compose -f docker-compose.yml run --rm laravel php artisan queue:clear
-# docker-compose -f docker-compose.yml run --rm laravel php artisan cache:clear
-# docker-compose -f docker-compose.yml run --user root --rm laravel chmod 777 /var/www/ -R
-# docker-compose -f docker-compose.yml run --user root --rm laravel rm /var/www/package-lock.json
-# docker-compose -f docker-compose.yml run --user root --rm laravel rm /laravel/public/mix-manifest.json
+    ## CHANGE FILE PERMS
+    # _log_info "Change file perms"
+    # docker-compose -f docker-compose.yml run --rm laravel php artisan queue:flush
+    # docker-compose -f docker-compose.yml run --rm laravel php artisan queue:clear
+    # docker-compose -f docker-compose.yml run --rm laravel php artisan cache:clear
+    # docker-compose -f docker-compose.yml run --user root --rm laravel chmod 777 /var/www/ -R
+    # docker-compose -f docker-compose.yml run --user root --rm laravel rm /var/www/package-lock.json
+    # docker-compose -f docker-compose.yml run --user root --rm laravel rm /laravel/public/mix-manifest.json
 
-## INSTALL NPM PACKAGES
-# _log_info "Install npm"
-# docker-compose -f docker-compose.yml run --rm laravel npm install
+    ## INSTALL NPM PACKAGES
+    # _log_info "Install npm"
+    # docker-compose -f docker-compose.yml run --rm laravel npm install
 
-## BUILD JS TO BUNDLE
-# _log_info "Building javascript bundles"
-# docker-compose -f docker-compose.yml run --rm laravel npm run testing
+    ## BUILD JS TO BUNDLE
+    # _log_info "Building javascript bundles"
+    # docker-compose -f docker-compose.yml run --rm laravel npm run testing
 
-## RESTART THE CONTAINER
-_log_info "Restart the containers"
-if [[ -f "$HOME/${GITHUB_REPO_NAME}/docker-compose.${DEPLOYMENT_ENV}.yml" ]]; then
-    docker-compose -f "docker-compose.${DEPLOYMENT_ENV}.yml" down
-else
-    docker-compose down
-fi
+    ## RESTART THE CONTAINER
+    _log_info "Restart the containers"
+    docker-compose -f "${DOCKER_FILE}" down
 
-## LAST FILE PERMS FIX
-_log_info "Last file perms fix"
-if [[ -f "$HOME"/"${GITHUB_REPO_NAME}"/docker-compose."${DEPLOYMENT_ENV}".yml ]]; then
-    docker-compose -f docker-compose."${DEPLOYMENT_ENV}".yml run --user root --rm laravel chown "$APP_USER" /var/www/ -R
-else
-    docker-compose run --user root --rm laravel chown "${APP_USER}" /var/www/ -R
+    ## LAST FILE PERMS FIX
+    _log_info "Last file perms fix"
+    docker-compose -f "${DOCKER_FILE}" run --user root --rm laravel chown "$APP_USER" /var/www/ -R
 fi
 
 ## RESET APP LOG FILES
 _log_info "Added deployment date to laravel logs"
 
-for file in "$HOME"/"${GITHUB_REPO_NAME}"/laravel/storage/logs/*.log; do
-    echo "" >> "$file";
-    echo "DEPLOYMENT DATESTAMP: ${NOWDATESTAMP}" >> "$file";
-    echo "" >> "$file";
-    chmod 777 "$file";
-done
-for file in "$HOME"/"${GITHUB_REPO_NAME}"/laravel/storage/logs/supervisord/*.log; do
-    echo "" >> "$file";
-    echo "DEPLOYMENT DATESTAMP: ${NOWDATESTAMP}" >> "$file";
-    echo "" >> "$file";
-    chmod 777 "$file";
-done
+if [[ -d "$HOME"/"${GITHUB_REPO_NAME}"/laravel ]]; then
+    for file in "$HOME"/"${GITHUB_REPO_NAME}"/laravel/storage/logs/*.log; do
+        echo "" >> "$file";
+        echo "DEPLOYMENT DATESTAMP: ${NOWDATESTAMP}" >> "$file";
+        echo "" >> "$file";
+        chmod 777 "$file";
+    done
+    for file in "$HOME"/"${GITHUB_REPO_NAME}"/laravel/storage/logs/supervisord/*.log; do
+        echo "" >> "$file";
+        echo "DEPLOYMENT DATESTAMP: ${NOWDATESTAMP}" >> "$file";
+        echo "" >> "$file";
+        chmod 777 "$file";
+    done
+fi
 ## WAIT FOR FILE & FOLDER OPERATIONS TO COMPLETE
 if [[ "$SCREEN_IS_PRESENT" == "true" ]]; then
    while screen -list | grep -q "${GITHUB_REPO_NAME}_deployment_moving_storage"; do
@@ -186,8 +175,6 @@ if [[ "$SCREEN_IS_PRESENT" == "true" ]]; then
    done
 fi
 
-if [[ -f "$HOME"/"${GITHUB_REPO_NAME}"/docker-compose."${DEPLOYMENT_ENV}".yml ]]; then
-    docker-compose -f docker-compose."${DEPLOYMENT_ENV}".yml up -d
-else
-    docker-compose up -d
+if [[ "$DOCKER_IS_PRESENT" = "1" ]]; then
+    docker-compose -f "${DOCKER_FILE}" up -d
 fi
