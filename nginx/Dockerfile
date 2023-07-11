@@ -13,6 +13,9 @@ ENV LANG ${APP_ENCODE}.UTF-8
 ENV LANGUAGE ${APP_ENCODE}.UTF-8
 ENV LC_ALL ${APP_ENCODE}.UTF-8
 
+ENV NGINX_BLOCK_BOTS ${NGINX_BLOCK_BOTS:-0}
+ENV NGINX_BLOCK_SCANNERS ${NGINX_BLOCK_SCANNERS:-0}
+
 # Set timezone and localization.
 RUN rm -rf /etc/localtime && \
     ln -snf /usr/share/zoneinfo/${APP_TIMEZONE} /etc/localtime && \
@@ -32,11 +35,11 @@ RUN apk update \
     && apk add --no-cache bash \
     && apk add --no-cache --update musl musl-utils musl-locales tzdata \
     && apk add --no-cache ca-certificates \
-    && apk add --no-cache curl
+    && apk add --no-cache curl wget
 
 # Set timezone and localization.
-RUN echo 'export LC_ALL=en_GB.UTF-8' >> /etc/profile.d/locale.sh && \
-    sed -i 's|LANG=C.UTF-8|LANG=en_GB.UTF-8|' /etc/profile.d/locale.sh
+RUN echo "export LC_ALL=${LANG}" >> /etc/profile.d/locale.sh && \
+    sed -i 's|LANG=C.UTF-8|LANG='$LANG'|' /etc/profile.d/locale.sh
 # && \
 # openssl req -x509 -nodes -newkey rsa:4096 \
 # -keyout /etc/ssl/private/ssl-cert-snakeoil.key \

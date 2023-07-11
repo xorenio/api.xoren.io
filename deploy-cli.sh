@@ -130,14 +130,8 @@ if [[ ${#SCRIPT_CMD_ARG} -ge 1 ]]; then
         "setup")
             _setup
             ;;
-        "setup:git:profile")
-            _setup_git
-            ;;
         "setup:secrets")
             _write_secrets_file
-            ;;
-        "setup:ssh:keys")
-            _setup_ssh_key
             ;;
         "version:local")
             _log_info "Local version: $DEPLOYMENT_VERSION"
@@ -166,9 +160,7 @@ repo:check                                  Check deployment updates.
 repo:update                                 Manually start an update.
 
 setup                                       Setup steps and update cron.
-setup:git:profile                           Set up git name and email.
 setup:secrets                               Create secrets file outside of repo.
-setup:ssh:keys                              Add SSH keys from .env file.
 
 version:local                               Print the local version of this repo.
 version:remote                              Print the remote versions of the repo.

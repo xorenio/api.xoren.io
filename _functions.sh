@@ -499,10 +499,6 @@ DB_PASSWORD="password"
 DEPLOYMENT_ENV=production
 DEPLOYMENT_TIMEZONE=Europe/London
 DEPLOYMENT_ENCODE=en_GB
-SSH_PUB_KEY="https://raw.githubusercontent.com/xorenio/ssh/main/id_ed25519_2.pub"
-SSH_BACKUP_PUB_KEY="https://raw.githubusercontent.com/xorenio/ssh/main/id_ed25519.pub"
-GIT_EMAIL="john@xoren.io"
-GIT_NAME="John J"
 EOF
     chmod 770 "$HOME"/."${GITHUB_REPO_NAME}"
     _log_info "Writen env vars file $HOME/.${GITHUB_REPO_NAME}"
@@ -525,6 +521,7 @@ _replace_env_project_secrets() {
     [[ ! -f "$HOME/${GITHUB_REPO_NAME}/.env" ]] && cp "$HOME/${GITHUB_REPO_NAME}/.env.$DEPLOYMENT_ENV" "$HOME/${GITHUB_REPO_NAME}/.env"
 
     sync "$HOME/${GITHUB_REPO_NAME}/.env"
+    chmod 700 "$HOME/${GITHUB_REPO_NAME}/.env"
 
     local first_letter name value;
     ## READ EACH LINE OF CONFIG FILE
@@ -552,11 +549,11 @@ _replace_env_project_secrets() {
     ## REPLACED DEPLOYMENT VARS
     while grep -F "\"<DEPLOYMENT_VERSION>\"" "$HOME/${GITHUB_REPO_NAME}/.env" &>/dev/null; do
         sed -i "s|\"<DEPLOYMENT_VERSION>\"|$LATEST_PROJECT_SHA|" "$HOME/${GITHUB_REPO_NAME}/.env"
-        sync -d "$HOME/${GITHUB_REPO_NAME}/.env"
+        sync "$HOME/${GITHUB_REPO_NAME}/.env"
         sleep 1
     done
     sed -i "s|\"<DEPLOYMENT_AT>\"|$NOWDATESTAMP|" "$HOME/${GITHUB_REPO_NAME}/.env"
-    sync -d "$HOME/${GITHUB_REPO_NAME}/.env"
+    sync "$HOME/${GITHUB_REPO_NAME}/.env"
 
 
     _log_info "END: Replacing APP environment variables"
@@ -722,44 +719,88 @@ _update() {
 
         # shellcheck disable=SC1090
         source "$HOME/${GITHUB_REPO_NAME}/_update.sh"
-    else
 
-        _log_to_file ""
-        _log_to_file "Re-deployment Started"
-        _log_to_file "====================="
-        _log_to_file "env: ${DEPLOYMENT_ENV}"
-
-        ## LEAVE PROJECT DIRECTORY
-        cd "$HOME" || _exit_script
-
-        ## RENAME OLD PROJECT DIRECTORY
-        _log_to_file "Moving old project folder."
-
-        [[ -f "$HOME/$GITHUB_REPO_NAME/.env" ]] && rm "$HOME/$GITHUB_REPO_NAME/.env"
-
-        mv -u -f "$HOME/$GITHUB_REPO_NAME" "$HOME/${GITHUB_REPO_NAME}_${NOWDATESTAMP}"
-
-        ## WAIT FOR INODE CHANGES
-        sync
-
-        ## CLONE FRESH COPY OF PROJECT / no log file
-        git clone git@github.com:${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}.git
-
-        ## WAIT FOR INODE CHANGES
-        sync
-
-        mv "$HOME/${GITHUB_REPO_NAME}_${NOWDATESTAMP}/"*.log "$HOME/${GITHUB_REPO_NAME}/"
-        mv "$HOME/${GITHUB_REPO_NAME}_${NOWDATESTAMP}/"*.json "$HOME/${GITHUB_REPO_NAME}/"
-
-        _log_to_file "Finished cloning fresh copy from github ${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}."
-
-        ## REPLACE ENV FILES
-        _log_to_file "Moving project secrets in to .env file."
-        _replace_env_project_secrets
-
-        _log_info "Finished updated project files."
-        _log_to_file ""
+        if [[ ! -n "$(type -t _pre_update)" && ! -n "$(type -t _post_update)"  ]]; then
+            return
+        fi
     fi
+
+    _log_to_file ""
+    _log_to_file "Re-deployment Started"
+    _log_to_file "====================="
+    _log_to_file "env: ${DEPLOYMENT_ENV}"
+
+    # Check if the function is set
+    if [[ -n "$(type -t _pre_update)" ]]; then
+        _pre_update
+    else
+        ## Enter project repo
+        cd "$HOME/$GITHUB_REPO_NAME"
+
+        if [[ "$DOCKER_IS_PRESENT" = "1" ]]; then
+            DOCKER_FILE="$HOME/${GITHUB_REPO_NAME}/docker-compose.yml"
+            if [[ -f "$HOME/${GITHUB_REPO_NAME}/docker-compose.${DEPLOYMENT_ENV}.yml" ]]; then
+                DOCKER_FILE="$HOME/${GITHUB_REPO_NAME}/docker-compose.${DEPLOYMENT_ENV}.yml"
+            fi
+
+            ## Stop running deployment
+            _log_info "Stopping docker containers"
+            docker-compose -f "${DOCKER_FILE}" down
+
+            ## Remove deployment docker images
+            _log_info "Removing docker images"
+            yes | docker-compose -f "${DOCKER_FILE}" rm
+
+            ## REMOVE DOCKER IMAGES VIA NAME
+            if [[ "$YQ_IS_PRESENT" = "1" ]]; then
+                yq '.services[].container_name' "${DOCKER_FILE}" |
+                while IFS= read -r container_name; do
+                    yes | docker image rm "${container_name//\"}"
+                done
+            fi
+        fi
+    fi
+
+
+    ## LEAVE PROJECT DIRECTORY
+    cd "$HOME" || _exit_script
+
+    ## RENAME OLD PROJECT DIRECTORY
+    _log_to_file "Moving old project folder."
+
+    [[ -f "$HOME/$GITHUB_REPO_NAME/.env" ]] && rm "$HOME/$GITHUB_REPO_NAME/.env"
+
+    mv -u -f "$HOME/$GITHUB_REPO_NAME" "$HOME/${GITHUB_REPO_NAME}_${NOWDATESTAMP}"
+
+    ## WAIT FOR INODE CHANGES
+    sync
+
+    ## CLONE FRESH COPY OF PROJECT / no log file
+    git clone "git@github.com:${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}.git"
+
+    ## WAIT FOR INODE CHANGES
+    sync
+
+    mv "$HOME/${GITHUB_REPO_NAME}_${NOWDATESTAMP}/"*.log "$HOME/${GITHUB_REPO_NAME}/"
+    mv "$HOME/${GITHUB_REPO_NAME}_${NOWDATESTAMP}/"*.json "$HOME/${GITHUB_REPO_NAME}/"
+
+    _log_to_file "Finished cloning fresh copy from github ${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}."
+
+    ## REPLACE ENV FILES
+    _log_to_file "Moving project secrets in to .env file."
+    _replace_env_project_secrets
+
+    if [[ -n "$(type -t _post_update)" ]]; then
+        _post_update
+    else
+        if [[ "$DOCKER_IS_PRESENT" = "1" ]]; then
+            docker-compose -f "${DOCKER_FILE}" up -d --build
+        fi
+        _delete_old_project_files
+    fi
+
+    _log_info "Finished updated project files."
+    _log_to_file ""
 }
 
 # Function: _check_update
@@ -799,6 +840,23 @@ _check_update() {
     fi
 }
 
+# Function: _calculate_folder_size
+# Description: Function to calculate the size of a folder excluding specific directories.
+# Parameters: None
+# Returns: None
+
+_calculate_folder_size() {
+    local folder=$1
+    local exclude_dirs=("$@")
+    local exclude_opts=""
+
+    for dir in "${exclude_dirs[@]}"; do
+        exclude_opts+="--exclude='$dir' "
+    done
+
+    du -s --exclude='.*/' $exclude_opts "$folder" | awk '{print $1}'
+}
+
 # Function: _delete_old_project_files
 # Description: Deletes old project files.
 # Parameters: None
@@ -806,16 +864,22 @@ _check_update() {
 
 _delete_old_project_files() {
 
-    local old_project_folder_byte_size
-    old_project_folder_byte_size=$(du "$HOME/${GITHUB_REPO_NAME}_${NOWDATESTAMP}" -sc | grep total)
+    [[ ! -d "$HOME/${GITHUB_REPO_NAME}_${NOWDATESTAMP}" ]] && return;
+    local old_size new_size size_difference;
 
-    old_project_folder_byte_size=${old_project_folder_byte_size/" "/""}
-    old_project_folder_byte_size=${old_project_folder_byte_size/" "/""}
+    # Compare the size of the old and new project folders
+    old_size=$(_calculate_folder_size "$HOME/${GITHUB_REPO_NAME}" "node_modules" "vendor" "logs")
+    new_size=$(_calculate_folder_size "$HOME/${GITHUB_REPO_NAME}_${NOWDATESTAMP}" "node_modules" "vendor" "logs")
+    size_difference=$(echo "scale=2; ($old_size - $new_size) / $old_size * 100" | bc)
 
-    if [[ old_project_folder_byte_size -le 1175400 ]]; then
-        echo "Not yet"
-        # rm -R
+    # Check if the old project folder is within 10% of the size of the new project
+    if (( $(echo "$size_difference <= 10" | bc -l) )); then
+        _log_info "Deleted: $HOME/${GITHUB_REPO_NAME}_${NOWDATESTAMP}"
+        yes | rm -rf "$HOME/${GITHUB_REPO_NAME}_${NOWDATESTAMP}"
+    else
+        _log_info "NOT Deleted: $HOME/${GITHUB_REPO_NAME}_${NOWDATESTAMP}"
     fi
+
 }
 # END - UPDATE FUNCTIONS
 
@@ -866,57 +930,10 @@ _delete_old_project_files() {
 _setup() {
 
     _install_update_cron
-    _setup_ssh_key
-    _setup_git
 }
 
 # Function: _setup_ssh_key
 # Description: Sets up an ED25519 ssh key for the root user.
 # Parameters: None
 # Returns: None
-
-_setup_ssh_key() {
-    _log_info "Setting up ssh keys"
-
-    local first_key second_key;
-
-    if [[ ! -f "$HOME/.ssh/id_ed25519" ]]; then
-        _log_info "Creating ed25519 ssh key"
-        ssh-keygen -t ed25519 -N "" -C "${GIT_EMAIL}" -f "$HOME/.ssh/id_ed25519"  > /dev/null 2>&1
-        _log_info "Public: $(cat "$HOME/.ssh/id_ed25519.pub")"
-        eval "$(ssh-agent -s)"
-        ssh-add "$HOME/.ssh/id_ed25519"
-    fi
-
-    _log_info "Loading SSH key: ${SSH_PUB_KEY}"
-    _log_info "Loading SSH key: ${SSH_BACKUP_PUB_KEY}"
-
-    curl -sSf "$SSH_PUB_KEY" -o "/tmp/FIRST_KEY.pub"
-    curl -sSf "$SSH_BACKUP_PUB_KEY" -o "/tmp/SECOND_KEY.pub"
-
-    # Read the content of the downloaded file
-    first_key=$(cat "/tmp/FIRST_KEY.pub")
-    second_key=$(cat "/tmp/SECOND_KEY.pub")
-
-    _install_authorized_key "$first_key"
-    _install_authorized_key "$second_key"
-
-    # Clean up the temporary file
-    rm "/tmp/FIRST_KEY.pub"
-    rm "/tmp/SECOND_KEY.pub"
-}
-
-
-# Function: _setup_git
-# Description: Sets up the local git profile by configuring user name and email.
-# Parameters: None
-# Returns: None
-
-_setup_git() {
-    _log_info "Setup local git profile"
-
-    git config --global user.name "${GIT_NAME}"
-    git config --global user.email "${GIT_EMAIL}"
-}
-
 # END -SETUP

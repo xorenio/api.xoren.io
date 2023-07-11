@@ -89,6 +89,8 @@ services:
       LANGUAGE: ${APP_ENCODE:-en_GB}.UTF-8
       LC_ALL: ${APP_ENCODE:-en_GB}.UTF-8
       SWOOLE_PORT: ${SWOOLE_PORT:-8000}
+      NGINX_BLOCK_BOTS: 1
+      NGINX_BLOCK_SCANNERS: 1
     volumes:
       - ./laravel:/var/www
     ports:
