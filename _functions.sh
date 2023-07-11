@@ -460,7 +460,7 @@ _check_project_secrets() {
         _log_error ""
         _log_error "Missing twisted var file $HOME/.${GITHUB_REPO_NAME}"
 
-        if [[ "$(_interactive_shell)" = "true" ]]; then
+        if [[ "$(_interactive_shell)" = "1" ]]; then
             read -rp "Write secrets file? [Y/n] (empty: no): " write_file
             if [[ $write_file =~ ^(Yes|yes|y)$ ]]; then
                 _write_project_secrets
@@ -500,7 +500,7 @@ DEPLOYMENT_ENV=production
 DEPLOYMENT_TIMEZONE=Europe/London
 DEPLOYMENT_ENCODE=en_GB
 EOF
-    chmod 770 "$HOME"/."${GITHUB_REPO_NAME}"
+    chmod 700 "$HOME"/."${GITHUB_REPO_NAME}"
     _log_info "Writen env vars file $HOME/.${GITHUB_REPO_NAME}"
 }
 
@@ -832,7 +832,9 @@ _check_update() {
         ## IF LOCAL VERSION AND REMOTE VERSION ARE THE SAME
         if [[ "${DEPLOYMENT_VERSION}" = "${LATEST_PROJECT_SHA}" ]]; then
 
-            _log_info "VERSION MATCH, ending script"
+            if [[ "$(_interactive_shell)" = "1" ]]; then
+                _log_info "VERSION MATCH, ending script"
+            fi
             _exit_script
         fi
         _update

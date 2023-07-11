@@ -5,7 +5,7 @@ block_scanners=${NGINX_BLOCK_SCANNERS:-"0"}
 swoole_port=${SWOOLE_PORT:-8000}
 
 # Function to check if the openssl commands have finished
-check_openssl_commands() {
+__check_openssl_commands() {
     while kill -0 "$1" 2>/dev/null; do
         sleep 1
     done
@@ -62,21 +62,22 @@ fi
 
 # Check if openssl commands have finished
 if [[ -n $openssl_pid ]]; then
-    check_openssl_commands "$openssl_pid"
+    __check_openssl_commands "$openssl_pid"
 fi
 if [[ -n $dhparam_pid ]]; then
-    check_openssl_commands "$dhparam_pid"
+    __check_openssl_commands "$dhparam_pid"
 fi
 
 config_file="/etc/nginx/conf.d/api.conf"
 
 current_port=$(grep -o "server laravel:[0-9]*" "$config_file" | awk -F ':' '{print $2}')
 
-if [[ -n "$laravel_port" && "$laravel_port" -ge 1 && "$laravel_port" -le 25565 ]]; then
-
-if [[ "$current_port" != "$swoole_port" ]]; then
-    sed -i "s|server laravel:$current_port|server laravel:$swoole_port|g" "$config_file"
-    sed -i "s|server localhost:$current_port backup|server localhost:$swoole_port backup|g" "$config_file"
+# Registered ports (1024-49151): These ports are used by applications and services that are not considered well-known but still require standardized port assignments.
+if [[ -n "$current_port" && "$current_port" -ge 1024 && "$current_port" -le 49151 ]]; then
+    if [[ "$current_port" != "$swoole_port" ]]; then
+        sed -i "s|server laravel:$current_port|server laravel:$swoole_port|g" "$config_file"
+        sed -i "s|server localhost:$current_port backup|server localhost:$swoole_port backup|g" "$config_file"
+    fi
 fi
 sync "$config_file"
 
