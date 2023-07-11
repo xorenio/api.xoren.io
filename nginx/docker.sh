@@ -70,12 +70,15 @@ fi
 
 config_file="/etc/nginx/conf.d/api.conf"
 
-current_port=$(grep -Po "server laravel:\K\d+" "$config_file")
+current_port=$(grep -o "server laravel:[0-9]*" "$config_file" | awk -F ':' '{print $2}')
+
+if [[ -n "$laravel_port" && "$laravel_port" -ge 1 && "$laravel_port" -le 25565 ]]; then
 
 if [[ "$current_port" != "$swoole_port" ]]; then
     sed -i "s|server laravel:$current_port|server laravel:$swoole_port|g" "$config_file"
     sed -i "s|server localhost:$current_port backup|server localhost:$swoole_port backup|g" "$config_file"
 fi
+sync "$config_file"
 
 # Check if port ${SWOOLE_PORT:-8000} is open on laravel DNS using netcat, Kubernetes friendly
 while ! nc -z -w1 laravel "$swoole_port" && ! nc -z -w1 localhost "$swoole_port"; do
