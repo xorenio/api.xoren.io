@@ -1047,20 +1047,20 @@
         },
         {
             "name": "laminas/laminas-diactoros",
-            "version": "3.2.0",
+            "version": "3.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laminas/laminas-diactoros.git",
-                "reference": "aca73646e658dce3f079f6b8648c651e193e331e"
+                "reference": "4db52734837c60259c9b2d7caf08eef8f7f9b9ac"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laminas/laminas-diactoros/zipball/aca73646e658dce3f079f6b8648c651e193e331e",
-                "reference": "aca73646e658dce3f079f6b8648c651e193e331e",
+                "url": "https://api.github.com/repos/laminas/laminas-diactoros/zipball/4db52734837c60259c9b2d7caf08eef8f7f9b9ac",
+                "reference": "4db52734837c60259c9b2d7caf08eef8f7f9b9ac",
                 "shasum": ""
             },
             "require": {
-                "php": "~8.0.0 || ~8.1.0 || ~8.2.0 || ~8.3.0",
+                "php": "~8.1.0 || ~8.2.0 || ~8.3.0",
                 "psr/http-factory": "^1.0.2",
                 "psr/http-message": "^1.1 || ^2.0"
             },
@@ -1078,7 +1078,7 @@
                 "php-http/psr7-integration-tests": "^1.3",
                 "phpunit/phpunit": "^9.5.28",
                 "psalm/plugin-phpunit": "^0.18.4",
-                "vimeo/psalm": "^5.9"
+                "vimeo/psalm": "^5.15.0"
             },
             "type": "library",
             "extra": {
@@ -1128,7 +1128,7 @@
                     "type": "community_bridge"
                 }
             ],
-            "time": "2023-09-03T13:11:37+00:00"
+            "time": "2023-10-26T11:01:07+00:00"
         },
         {
             "name": "laravel/framework",
@@ -1337,44 +1337,44 @@
         },
         {
             "name": "laravel/octane",
-            "version": "v2.0.6",
+            "version": "v2.3.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/octane.git",
-                "reference": "112bddc93b426d94afda36707d4d95d9838e2943"
+                "reference": "ddb5e7fe33fe7aff24c61d262d7d9dc00918888f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/octane/zipball/112bddc93b426d94afda36707d4d95d9838e2943",
-                "reference": "112bddc93b426d94afda36707d4d95d9838e2943",
+                "url": "https://api.github.com/repos/laravel/octane/zipball/ddb5e7fe33fe7aff24c61d262d7d9dc00918888f",
+                "reference": "ddb5e7fe33fe7aff24c61d262d7d9dc00918888f",
                 "shasum": ""
             },
             "require": {
-                "laminas/laminas-diactoros": "^3.0.0",
-                "laravel/framework": "^10.10.1",
+                "laminas/laminas-diactoros": "^3.0",
+                "laravel/framework": "^10.10.1|^11.0",
                 "laravel/serializable-closure": "^1.3.0",
-                "nesbot/carbon": "^2.66.0",
+                "nesbot/carbon": "^2.66.0|^3.0",
                 "php": "^8.1.0",
-                "symfony/psr-http-message-bridge": "^2.2.0"
+                "symfony/psr-http-message-bridge": "^2.2.0|^6.4|^7.0"
             },
             "conflict": {
                 "spiral/roadrunner": "<2023.1.0",
-                "spiral/roadrunner-cli": "<2.5.0",
-                "spiral/roadrunner-http": "<3.0.1"
+                "spiral/roadrunner-cli": "<2.6.0",
+                "spiral/roadrunner-http": "<3.3.0"
             },
             "require-dev": {
                 "guzzlehttp/guzzle": "^7.6.1",
-                "inertiajs/inertia-laravel": "^0.6.9",
+                "inertiajs/inertia-laravel": "^0.6.9|^1.0",
                 "laravel/scout": "^10.2.1",
                 "laravel/socialite": "^5.6.1",
-                "livewire/livewire": "^2.12.3",
+                "livewire/livewire": "^2.12.3|^3.0",
                 "mockery/mockery": "^1.5.1",
-                "nunomaduro/collision": "^6.4.0|^7.5.2",
-                "orchestra/testbench": "^8.5.2",
+                "nunomaduro/collision": "^6.4.0|^7.5.2|^8.0",
+                "orchestra/testbench": "^8.5.2|^9.0",
                 "phpstan/phpstan": "^1.10.15",
-                "phpunit/phpunit": "^10.1.3",
-                "spiral/roadrunner-cli": "^2.5.0",
-                "spiral/roadrunner-http": "^3.0.1"
+                "phpunit/phpunit": "^10.4",
+                "spiral/roadrunner-cli": "^2.6.0",
+                "spiral/roadrunner-http": "^3.3.0"
             },
             "bin": [
                 "bin/roadrunner-worker",
@@ -1411,6 +1411,7 @@
             ],
             "description": "Supercharge your Laravel application's performance.",
             "keywords": [
+                "frankenphp",
                 "laravel",
                 "octane",
                 "roadrunner",
@@ -1420,7 +1421,7 @@
                 "issues": "https://github.com/laravel/octane/issues",
                 "source": "https://github.com/laravel/octane"
             },
-            "time": "2023-08-29T13:52:04+00:00"
+            "time": "2024-01-30T03:05:25+00:00"
         },
         {
             "name": "laravel/prompts",
@@ -5227,43 +5228,38 @@
         },
         {
             "name": "symfony/psr-http-message-bridge",
-            "version": "v2.3.1",
+            "version": "v6.4.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/psr-http-message-bridge.git",
-                "reference": "581ca6067eb62640de5ff08ee1ba6850a0ee472e"
+                "reference": "49cfb0223ec64379f7154214dcc1f7c46f3c7a47"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/psr-http-message-bridge/zipball/581ca6067eb62640de5ff08ee1ba6850a0ee472e",
-                "reference": "581ca6067eb62640de5ff08ee1ba6850a0ee472e",
+                "url": "https://api.github.com/repos/symfony/psr-http-message-bridge/zipball/49cfb0223ec64379f7154214dcc1f7c46f3c7a47",
+                "reference": "49cfb0223ec64379f7154214dcc1f7c46f3c7a47",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.2.5",
-                "psr/http-message": "^1.0 || ^2.0",
-                "symfony/deprecation-contracts": "^2.5 || ^3.0",
-                "symfony/http-foundation": "^5.4 || ^6.0"
+                "php": ">=8.1",
+                "psr/http-message": "^1.0|^2.0",
+                "symfony/http-foundation": "^5.4|^6.0|^7.0"
+            },
+            "conflict": {
+                "php-http/discovery": "<1.15",
+                "symfony/http-kernel": "<6.2"
             },
             "require-dev": {
                 "nyholm/psr7": "^1.1",
-                "psr/log": "^1.1 || ^2 || ^3",
-                "symfony/browser-kit": "^5.4 || ^6.0",
-                "symfony/config": "^5.4 || ^6.0",
-                "symfony/event-dispatcher": "^5.4 || ^6.0",
-                "symfony/framework-bundle": "^5.4 || ^6.0",
-                "symfony/http-kernel": "^5.4 || ^6.0",
-                "symfony/phpunit-bridge": "^6.2"
-            },
-            "suggest": {
-                "nyholm/psr7": "For a super lightweight PSR-7/17 implementation"
+                "php-http/discovery": "^1.15",
+                "psr/log": "^1.1.4|^2|^3",
+                "symfony/browser-kit": "^5.4|^6.0|^7.0",
+                "symfony/config": "^5.4|^6.0|^7.0",
+                "symfony/event-dispatcher": "^5.4|^6.0|^7.0",
+                "symfony/framework-bundle": "^6.2|^7.0",
+                "symfony/http-kernel": "^6.2|^7.0"
             },
             "type": "symfony-bridge",
-            "extra": {
-                "branch-alias": {
-                    "dev-main": "2.3-dev"
-                }
-            },
             "autoload": {
                 "psr-4": {
                     "Symfony\\Bridge\\PsrHttpMessage\\": ""
@@ -5283,11 +5279,11 @@
                 },
                 {
                     "name": "Symfony Community",
-                    "homepage": "http://symfony.com/contributors"
+                    "homepage": "https://symfony.com/contributors"
                 }
             ],
             "description": "PSR HTTP message bridge",
-            "homepage": "http://symfony.com",
+            "homepage": "https://symfony.com",
             "keywords": [
                 "http",
                 "http-message",
@@ -5295,8 +5291,7 @@
                 "psr-7"
             ],
             "support": {
-                "issues": "https://github.com/symfony/psr-http-message-bridge/issues",
-                "source": "https://github.com/symfony/psr-http-message-bridge/tree/v2.3.1"
+                "source": "https://github.com/symfony/psr-http-message-bridge/tree/v6.4.3"
             },
             "funding": [
                 {
@@ -5312,7 +5307,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-07-26T11:53:26+00:00"
+            "time": "2024-01-23T14:51:35+00:00"
         },
         {
             "name": "symfony/routing",
