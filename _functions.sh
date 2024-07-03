@@ -717,13 +717,16 @@ MAIL_PORT=587
 MAIL_USERNAME=""
 MAIL_PASSWORD="outbound.mailhop.password"
 MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS="noreply@m.myrank.ing"
-MAIL_TO_ADDRESS="admin@myrank.ing"
+MAIL_FROM_ADDRESS="noreply@m.xoren.io"
+MAIL_TO_ADDRESS="admin@xoren.io"
+PUSHER_APP_ID="app-id"
+PUSHER_APP_KEY="app-key"
+PUSHER_APP_SECRET="app-secret"
 # CLOUDFLARE
 CF_TOKEN=""
 CF_ACCOUNT_ID=""
-CF_DOMAIN_ID="myrank.ing"
-CF_PROJECT_ID="myranking"
+CF_DOMAIN_ID="xoren.io"
+CF_PROJECT_ID=""
 EOF
     chmod 700 "$HOME"/."${GIT_REPO_NAME}"
     _log_info "Writen env vars file $HOME/.${GIT_REPO_NAME}"
