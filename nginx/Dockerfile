@@ -1,26 +1,26 @@
 FROM nginx:alpine
 
+MAINTAINER John J <john@xoren.io>
+
 # Build arguments.
-ARG APP_TIMEZONE=Europe/London
-ARG APP_ENCODE=en_GB
-ARG LCFILE=/etc/default/locale
-ARG LGFILE=/etc/locale.gen
+ARG TZ=Europe/London
+ARG LANG=en_GB
+# ARG LCFILE=/etc/default/locale
+# ARG LGFILE=/etc/locale.gen
 
 # Environment variables.
 ENV DEBIAN_FRONTEND noninteractive
-ENV TZ ${APP_TIMEZONE}
-ENV LANG ${APP_ENCODE}.UTF-8
-ENV LANGUAGE ${APP_ENCODE}.UTF-8
-ENV LC_ALL ${APP_ENCODE}.UTF-8
+
+# Set timezone.
+ENV TZ ${TZ}
+
+# Set locale settings.
+ENV LANG ${LANG}
+ENV LANGUAGE ${LANG}.UTF-8
+ENV LC_ALL ${LANG}.UTF-8
 
 ENV NGINX_BLOCK_BOTS ${NGINX_BLOCK_BOTS:-0}
 ENV NGINX_BLOCK_SCANNERS ${NGINX_BLOCK_SCANNERS:-0}
-
-# Set timezone and localization.
-RUN rm -rf /etc/localtime && \
-    ln -snf /usr/share/zoneinfo/${APP_TIMEZONE} /etc/localtime && \
-    echo "en_US.UTF-8 UTF-8" > $LGFILE && \
-    echo ${APP_ENCODE}".UTF-8 UTF-8" >> $LGFILE
 
 RUN  rm -R /etc/nginx/conf.d && mkdir -p /etc/nginx/snippets/
 COPY nginx/nginx.conf /etc/nginx/nginx.conf
@@ -57,7 +57,8 @@ RUN touch /var/log/messages
 
 # Copy 'logrotate' config file
 COPY nginx/logrotate/nginx /etc/logrotate.d/
-COPY --chown=www-data:www-data laravel/ /var/www
+#COPY --chown=www-data:www-data laravel/storage /var/www/storage
+#COPY --chown=www-data:www-data laravel/public /var/www/public
 
 COPY nginx/docker.sh /opt/docker.sh
 
