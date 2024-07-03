@@ -1,49 +1,68 @@
 ARG MYSQL_VERSION
-FROM mysql:${MYSQL_VERSION:-8}-debian
+FROM percona:${MYSQL_VERSION:-8}
+
+MAINTAINER John J <john@xoren.io>
 
 # Build arguments.
 ARG APP_ENV=production
-ARG APP_TIMEZONE="Europe/London"
-ARG APP_ENCODE="en_GB"
-ARG LCFILE="/etc/default/locale"
-ARG LGFILE="/etc/locale.gen"
+ARG TZ=Europe/London
+ARG LANG=en_GB
 
 # Environment variables.
-ENV DEBIAN_FRONTEND noninteractive
 ENV APP_ENV ${APP_ENV}
-ENV APP_USER ${APP_USER}
-ENV APP_USER_UUID ${APP_USER_UUID}
 
+# Set timezone.
+ENV TZ ${TZ}
+
+# Set locale settings.
+ENV LANG ${LANG}
+ENV LANGUAGE ${LANG}.UTF-8
+ENV LC_ALL ${LANG}.UTF-8
+
+USER root
+
+# Update and install required system packages.
+RUN dnf update -y && dnf install -y \
+    dnf-utils \
+    rocksdb \
+    percona-server-rocksdb \
+    netcat
+
+    # ca-certificates \
+    # tzdata \
+    # glibc-langpack-en \
 # Set timezone and localization.
-ENV TZ ${APP_TIMEZONE}
-ENV LANG ${APP_ENCODE}.UTF-8
-ENV LANGUAGE ${APP_ENCODE}.UTF-8
-ENV LC_ALL ${APP_ENCODE}.UTF-8
+# RUN ln -snf /usr/share/zoneinfo/${APP_TIMEZONE} /etc/localtime && \
+# RUN echo "$APP_TIMEZONE" > /etc/timezone && \
+    # echo "en_US.UTF-8 UTF-8" > $LGFILE 
+    # && \
+# RUN echo ${APP_ENCODE}".UTF-8 UTF-8" >> $LGFILE && \
+    # echo "LANG="${APP_ENCODE}".UTF-8" > $LCFILE
 
-# Update and upgrade system packages, then install required system packages.
-RUN apt-get update && apt-get install -y -q \
-apt-utils dialog locales tzdata ca-certificates
+# RUN for lc_var in ADDRESS IDENTIFICATION MEASUREMENT MONETARY NAME NUMERIC PAPER TELEPHONE TIME; \
+    # do echo "LC_${lc_var}=${APP_ENCODE}.UTF-8" >> $LCFILE; done && \
+RUN ln -sf /usr/share/zoneinfo/${APP_TIMEZONE} /etc/localtime
 
-# Set timezone and localization.
-RUN ln -snf /usr/share/zoneinfo/${APP_TIMEZONE} /etc/localtime && \
-    echo "$APP_TIMEZONE" > /etc/timezone && \
-    echo "en_US.UTF-8 UTF-8" > $LGFILE && \
-    echo ${APP_ENCODE}".UTF-8 UTF-8" >> $LGFILE && \
-    echo "LANG="${APP_ENCODE}".UTF-8" > $LCFILE && \
-    for lc_var in ADDRESS IDENTIFICATION MEASUREMENT MONETARY NAME NUMERIC PAPER TELEPHONE TIME; \
-    do echo "LC_${lc_var}=${APP_ENCODE}.UTF-8" >> $LCFILE; done && \
-    dpkg-reconfigure --frontend noninteractive tzdata && locale-gen ${APP_ENCODE}.UTF-8 && update-locale
-
-RUN chown -R mysql:root /var/lib/mysql/
 
 # Remove packages no longer needed to reduce container size
-RUN apt-get autoremove -y && apt-get autoclean -y && \
-    rm -rf /var/lib/apt/lists/*
+RUN dnf autoremove -y && dnf clean all
 
-ENV DEBIAN_FRONTEND dialog
+COPY $APP_ENV.cnf /etc/my.cnf.d/custom.cnf
 
-COPY $APP_ENV.cnf /etc/mysql/conf.d/custom.cnf
+# Change ownership of MySQL data directory
+RUN chown -R mysql:mysql /var/lib/mysql/ && \
+    mkdir -p /opt chmod 777 /opt && \
+    chown mysql:mysql /opt
 
-EXPOSE 3306
+COPY --chown=mysql:mysql docker.sh /opt/docker.sh
+
+# removes windows line ending
+RUN chmod 777 /opt/docker.sh && sed -i 's/\r//g' /opt/docker.sh
+
+USER mysql
+
+EXPOSE 3306 33060
 
 CMD ["mysqld"]
+
+# CMD ["/bin/bash", "/opt/docker.sh"]

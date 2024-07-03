@@ -1,8 +1,52 @@
 [mysql]
 
 [mysqld]
+# Enable strict mode and error handling
 sql-mode="STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"
-character-set-server=utf8
-default-authentication-plugin=mysql_native_password
-bind-address  = 0.0.0.0
-local_infile = 0
+
+# Optimize character set and collation
+character-set-server=utf8mb4
+collation-server=utf8mb4_unicode_ci
+
+# Use a secure authentication method
+default-authentication-plugin=caching_sha2_password
+
+# Bind to all available network interfaces
+bind-address = 0.0.0.0
+
+# Disable local file loading for security
+local_infile = 1
+
+#secure-file-priv=/var/www/storage/app
+
+# Define the directory for MySQL data
+datadir = /var/lib/mysql
+
+# Limit maximum connections to a reasonable number
+max_connections = 100
+
+# Use the capabilities of your NVMe SSD
+innodb_io_capacity = 50000        # Example value, adjust based on testing
+innodb_io_capacity_max = 60000    # Set to a slightly higher value
+
+innodb_doublewrite=0
+innodb_use_native_aio=0
+#innodb_use_atomic_writes=0
+
+innodb_log_write_ahead_size=16384
+
+# Optimize InnoDB settings
+innodb_flush_log_at_trx_commit = 2 # For strict durability (0 might be acceptable if you can tolerate some loss)
+innodb_flush_method = O_DIRECT
+innodb_autoinc_lock_mode = 2
+innodb_buffer_pool_size = 1G
+#innodb_log_file_size = 2G
+
+# Thread settings
+thread_cache_size = 32
+thread_handling = pool-of-threads
+thread_pool_size = 16
+
+# Disable binary logging if not needed
+log_bin = 0
+
