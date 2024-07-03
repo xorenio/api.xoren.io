@@ -100,6 +100,7 @@ _post_update() {
 
     if [[ ! -f "$HOME/${GIT_REPO_NAME}/laravel/.env" ]]; then
         cp "$HOME/${GIT_REPO_NAME}/.env" "$HOME/${GIT_REPO_NAME}/laravel/.env"
+        sync "$HOME/${GIT_REPO_NAME}/laravel/.env"
     fi
     chmod 770 "$HOME/${GITHUB_REPO_NAME}/laravel/.env"
 
