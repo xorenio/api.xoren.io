@@ -21,8 +21,8 @@ ARG LANG=en_GB
 ARG LCFILE=/etc/default/locale
 ARG LGFILE=/etc/locale.gen
 
-ARG NODE_VERSION=20
-ARG SWOOLE_PORT=8000
+ARG NODE_VERSION=${NODE_VERSION:-20}
+ARG SWOOLE_PORT=${SWOOLE_PORT:-8000}
 
 # Environment variables.
 ENV APP_ENV ${APP_ENV:-local}
@@ -31,10 +31,13 @@ ENV APP_USER_UUID ${APP_USER_UUID:-1000}
 ENV APP_USER_GUID ${APP_USER_GUID:-1000}
 ENV DEBIAN_FRONTEND noninteractive
 
+
 # Set timezone.
+ARG TZ=${TZ:-Europe/London}
 ENV TZ ${TZ}
 
 # Set locale settings.
+ARG LANG=${TZ:-en_GB}
 ENV LANG ${LANG}
 
 # Swoole Environment variables.
