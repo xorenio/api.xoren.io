@@ -82,7 +82,7 @@ ISOLOCATION=${ISOLOCATION:-"GB"}
 ISOSTATELOCATION=${ISOSTATELOCATION:-""}
 
 # Git repo name
-GIT_REPO_NAME="${GIT_REPO_NAME:-$(basename "$(git rev-parse --show-toplevel)")}"
+GIT_REPO_NAME="${GIT_REPO_NAME:-$(cd "$SCRIPT_DIR" && basename "$(git rev-parse --show-toplevel)")}"
 
 # if using GitHub, Github Details if not ignore
 GITHUB_REPO_OWNER="${GITHUB_REPO_OWNER:-$(git remote get-url origin | sed -n 's/.*github.com:\([^/]*\)\/.*/\1/p')}"
