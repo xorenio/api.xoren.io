@@ -1,16 +1,14 @@
 <?php
 
-namespace App\Jobs\Emails\Contact;
+namespace App\Jobs\Http\Contact\Emails;
 
+use App\Mail\Contact\Received as SendReceivedEmail;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-
 use Illuminate\Support\Facades\Mail;
-use App\Mail\Contact\Received as SendReceivedEmail;
 
 class Received implements ShouldQueue
 {
@@ -35,13 +33,13 @@ class Received implements ShouldQueue
     public function handle()
     {
         try {
-            if (in_array(env('MAIL_MAILER', 'log'), ['log', false, "false"]) ) {
+            if (in_array(env('MAIL_MAILER', 'log'), ['log', false, "false"])) {
 
                 \Log::info(
                     "\n --- EMAIL LOGGED ---\nEmails\Contact\Received\n"
-                    ."\nEmail Data\n"
-                    .json_encode($this->fields)
-                    ."\n--- EMAIL LOGGED ---\n"
+                    . "\nEmail Data\n"
+                    . json_encode($this->fields)
+                    . "\n--- EMAIL LOGGED ---\n"
                 );
             } else {
 
@@ -52,11 +50,11 @@ class Received implements ShouldQueue
 
             \Log::error(
                 "\n --- EMAIL LOGGED --- Emails\Contact\Received"
-                ."\nEmail Data\n"
-                .json_encode($this->fields)
-                ."\nFault Message\n"
-                .json_encode($e->getMessage())
-                ."\n--- EMAIL LOGGED ---\n"
+                . "\nEmail Data\n"
+                . json_encode($this->fields)
+                . "\nFault Message\n"
+                . json_encode($e->getMessage())
+                . "\n--- EMAIL LOGGED ---\n"
             );
         }
     }
